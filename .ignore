@@ -1,0 +1,6 @@
+# Ignore list for file picker
+
+target
+blender
+roms
+__pycache__

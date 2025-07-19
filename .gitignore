@@ -1,0 +1,7 @@
+target
+*.wasm
+
+**/__pycache__
+blender/out
+blender/*.blend?
+blender/*.txt?

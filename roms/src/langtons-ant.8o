@@ -1,0 +1,78 @@
+:alias collided vf
+:alias tmp v0
+:alias px v1
+:alias py v2
+:alias turn v3
+:alias dt v4
+:alias controlled v5
+
+:const RIGHT 9
+:const LEFT 7
+:const UP 5
+:const DOWN 8
+
+: main
+	# Center ant's position
+	px := 32
+	py := 16
+	# Randomize turn
+	turn := random 3
+
+	# Set I to "1" char address
+	i := 5
+
+	loop
+		controlled := 0	
+		dt := delay
+		if dt != 0 then jump skip
+		
+		sprite px py 1
+
+		# Turn right
+		tmp := RIGHT
+		if tmp key begin
+			turn_right
+			controlled := 1
+		end
+
+		# Turn left
+		tmp := LEFT
+		if tmp key begin
+			turn_left
+			controlled := 1
+		end
+
+		# Move forward
+		tmp := UP
+		if tmp key begin
+			controlled := 1
+		end
+
+		if controlled == 0 begin
+			if dt == 0 begin
+				if collided == 1 then turn_right # Turn right on NON empty
+				if collided == 0 then turn_left # Turn left on empty
+			end
+		else
+			tmp := 4
+			delay := tmp
+		end
+
+		# Update movement
+		if turn == 0 then py -= 1 # Up
+		if turn == 1 then px += 1 # Right
+		if turn == 2 then py += 1 # Down
+		if turn == 3 then px -= 1 # Left
+		
+		: skip
+	again
+	
+: turn_left
+	turn -= 1
+	if turn == 255 then turn := 3
+;
+
+: turn_right
+	turn += 1
+	if turn == 4 then turn := 0
+;

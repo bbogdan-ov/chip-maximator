@@ -1,0 +1,34 @@
+[package]
+name = "chip-maximator"
+version = "0.1.0"
+edition = "2024"
+repository = "https://github.com/bbogdan-ov/chip-maximator"
+license = "MIT"
+authors = ["bogdanov <bbogdan_ov@mail.ru>"]
+
+# Dependencies
+
+[dependencies]
+bitflags = "2.9.1"
+miniquad = { git = "https://github.com/not-fl3/miniquad" }
+quad-rand = "0.2.3"
+
+# TODO: Leave only the `playback` feature, because we don't need audio decoding
+#       at runtime. Currently, if i'm trying to remove the `vorbis` feature, Rust
+#       starts arguing (try to remove it yourself to see what will happen)
+[target.'cfg(not(target_arch = "wasm32"))'.dependencies.rodio]
+git = "https://github.com/RustAudio/rodio"
+rev = "d2313b0bfee41fdf5ad6da5c1bd1a5a18ea71e75"
+default-features = false
+features = ["playback", "vorbis"]
+
+# Build dependencies
+
+[build-dependencies]
+png = "0.17.16"
+
+[build-dependencies.rodio]
+git = "https://github.com/RustAudio/rodio"
+rev = "d2313b0bfee41fdf5ad6da5c1bd1a5a18ea71e75"
+default-features = false
+features = ["vorbis"]

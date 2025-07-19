@@ -1,0 +1,133 @@
+:alias tmp v0
+:alias collided vf
+:alias px v1
+:alias py v2
+:alias dir v3
+:alias score v4
+:alias count v5
+
+:const ONE_ADDR 5
+
+:const RIGHT 9
+:const LEFT 7
+:const UP 5
+:const DOWN 8
+
+# Delay between each player step
+:const DELAY 3
+
+:macro player_draw {
+	sprite px py 1
+}
+:macro digit_draw {
+	load tmp
+	i := hex tmp
+	sprite px py 5
+	px += 5
+}
+
+:macro dir_update KEY OPPOSITE_KEY {
+	tmp := KEY
+	if tmp key begin
+		if dir != OPPOSITE_KEY then dir := KEY
+	end
+}
+
+:macro wait_and_jump FRAMES LABEL {
+	tmp := FRAMES
+	delay := tmp
+
+	loop
+		tmp := delay
+		if tmp == 0 begin
+			jump LABEL
+		end
+	again
+}
+
+: bcd_score_hundreds 0x00
+: bcd_score_tens 0x00
+: bcd_score_ones 0x00
+
+: main
+	clear
+	
+	# Reset
+	score := 0
+	dir := 0
+
+	# Place player to the screen center
+	px := 30
+	py := 15
+
+	# Set I to "1" char address
+	i := ONE_ADDR
+	player_draw
+	
+	loop
+		# Wait for a key press again if invalid key was pressed
+		while dir == 0
+	
+		tmp := key
+		if tmp == RIGHT then dir := RIGHT
+		if tmp == LEFT then dir := LEFT
+		if tmp == UP then dir := UP
+		if tmp == DOWN then dir := DOWN
+	again
+
+	loop
+		dir_update RIGHT LEFT
+		dir_update LEFT RIGHT
+		dir_update UP DOWN
+		dir_update DOWN UP
+	
+		tmp := delay
+		if tmp == 0 begin
+			# Update movement
+			if dir == RIGHT then px += 1 # Right
+			if dir == LEFT then px -= 1 # Left
+			if dir == UP then py -= 1 # Up
+			if dir == DOWN then py += 1 # Down
+		
+			player_draw
+			if collided == 1 begin
+				tmp := 10
+				buzzer := tmp
+				wait_and_jump 30 gameover
+			end
+			
+			count += 1
+			
+			if count == 8 begin
+				# Increment score every 8th step
+				score += 1
+				count := 0
+			end
+			
+			tmp := DELAY
+			delay := tmp
+		end
+	again
+
+: gameover
+	clear
+	
+	# Store score BCD
+	i := bcd_score_hundreds
+	bcd score
+	
+	# Draw the score
+	px := 25
+	py := 13	# Hundreds
+	digit_draw
+	# Tens
+	i := bcd_score_tens
+	digit_draw
+	# Ones
+	i := bcd_score_ones
+	digit_draw
+	
+	# Wait for a key press and restart the game
+	tmp := key
+	jump main
+	
