@@ -1,7 +1,6 @@
 mod app;
 mod assets;
 mod audio;
-mod draw;
 mod emu;
 mod games;
 mod input;

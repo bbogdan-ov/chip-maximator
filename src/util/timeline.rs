@@ -141,7 +141,6 @@ impl<A: Copy> Timeline<A> {
 		match keyframe {
 			Keyframe::Action(action) => Some(action),
 			Keyframe::Delay(delay) => {
-				let delay = delay;
 				self.delay_timer.start_duration(delay);
 				None
 			}

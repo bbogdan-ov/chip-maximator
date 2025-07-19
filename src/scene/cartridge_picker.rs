@@ -95,7 +95,7 @@ impl Default for CartridgePicker {
 		let mut cards = Vec::with_capacity(GAMES.len());
 
 		for info in GAMES {
-			cards.push(Card::new(&info))
+			cards.push(Card::new(info))
 		}
 
 		Self {
@@ -134,7 +134,7 @@ impl CartridgePicker {
 		}
 
 		self.angle += self.velocity;
-		self.angle = self.angle % PI2;
+		self.angle %= PI2;
 
 		for (i, card) in self.cards.iter_mut().enumerate() {
 			card.pos_z = ((i as f32 / n * PI2 + self.angle + step / 2.0).cos() + 1.0) / 2.0;
@@ -148,7 +148,7 @@ impl CartridgePicker {
 			let a = &self.cards[*ia].pos_z;
 			let b = &self.cards[*ib].pos_z;
 
-			b.partial_cmp(&a).unwrap_or(Ordering::Equal)
+			b.partial_cmp(a).unwrap_or(Ordering::Equal)
 		});
 
 		if let Some(i) = self.sorted_cards.last() {

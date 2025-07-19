@@ -83,10 +83,7 @@ fn decode_sounds() {
 
 		// Decode audio data
 		let decoder = rodio::Decoder::new_vorbis(file).unwrap();
-		let buf = decoder
-			.map(|s| s.to_ne_bytes())
-			.flatten()
-			.collect::<Vec<u8>>();
+		let buf = decoder.flat_map(|s| s.to_ne_bytes()).collect::<Vec<u8>>();
 
 		// Store sample data into a file
 		let filename = entry.file_name();

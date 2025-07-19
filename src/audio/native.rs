@@ -18,7 +18,7 @@ impl AlignedSoundBytes<[u8]> {
 	/// Function is taken from `bytemuck`:
 	/// https://github.com/Lokathor/bytemuck/blob/0e11472150c3b63cbae3b445230fe074405bd2d2/src/internal.rs#L353
 	#[inline]
-	pub fn into_f32_slice(&self) -> &'static [f32] {
+	pub fn as_f32_slice(&self) -> &'static [f32] {
 		// Check alignment
 		assert_eq!((self.0.as_ptr() as usize) % mem::align_of::<f32>(), 0);
 
@@ -37,7 +37,7 @@ macro_rules! include_sound_data {
 		use $crate::audio::AlignedSoundBytes as B;
 
 		const DATA: &B<[u8]> = &B(*include_bytes!($file));
-		$crate::audio::SoundData(DATA.into_f32_slice())
+		$crate::audio::SoundData(DATA.as_f32_slice())
 	}};
 }
 

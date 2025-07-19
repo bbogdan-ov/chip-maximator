@@ -1,9 +1,7 @@
 use crate::{
 	app::AppContext,
-	emu::Emu,
-	math::{Color, ToStrBytes},
+	math::Color,
 	painter::{CanvasId, Text, TextureOpts},
-	state::State,
 };
 
 /// Back board titles display
@@ -27,7 +25,7 @@ impl TitlesDisplay {
 		}
 	}
 
-	pub fn offscreen_draw(&mut self, ctx: &mut AppContext, state: &mut State) {
+	pub fn offscreen_draw(&mut self, ctx: &mut AppContext) {
 		Text::new(&ctx.assets.serif_font)
 			.with_font_size(0.7)
 			.with_pos((8.0, 8.0))

@@ -47,7 +47,7 @@ impl InstuctionLeds {
 				x += 1.0;
 			}
 
-			let byte = if i <= LEDS_IN_ROW - 1 {
+			let byte = if i < LEDS_IN_ROW {
 				self.ins.0 as i32
 			} else {
 				self.ins.1 as i32

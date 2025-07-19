@@ -107,10 +107,10 @@ fn populate_serif_font_lookup() -> FontLookup {
 	// a-z
 	lookup[97..122].copy_from_slice(&upper_a_z.map(|n| n + 26));
 
-	for byte in b"iljft".into_iter() {
+	for byte in b"iljft".iter() {
 		widths[*byte as usize] = CharWidth(0.5);
 	}
-	for byte in b"IJsr".into_iter() {
+	for byte in b"IJsr".iter() {
 		widths[*byte as usize] = CharWidth(0.75);
 	}
 

@@ -11,7 +11,7 @@ use crate::{
 	native::NativeInstant,
 	painter::{CanvasId, Painter, Sprite},
 	scene::Scene,
-	state::{BoardSide, State},
+	state::State,
 	tooltip::Tooltip,
 	util::Anim,
 };

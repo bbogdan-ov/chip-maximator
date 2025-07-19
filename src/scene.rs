@@ -31,7 +31,7 @@ use valve::Valve;
 use crate::{
 	audio::Sound,
 	input::InputConsume,
-	math::{Color, Lerp, Rect},
+	math::{Color, Rect},
 	painter::{BlendMode, CanvasId, Icon, IconKind, Merge, Sprite, Text},
 	state::{BoardSide, State},
 	util::{Anim, AnimRef, AnimWait, Easing, Keyframe, Timeline, TweenPlay},
@@ -301,16 +301,15 @@ impl Scene {
 				let frame = ctx.assets.titles_display_uv.frames.x - 1;
 
 				self.back_board.draw(ctx, self.normal_layer);
-				self.back_board
-					.draw_displays(ctx, state, self.add_layer, frame);
+				self.back_board.draw_displays(ctx, self.add_layer, frame);
 			}
 			// Flipping board
-			BoardAnim::Flipping => self.draw_flipping(ctx, state),
+			BoardAnim::Flipping => self.draw_flipping(ctx),
 			// Falling board
 			BoardAnim::Falling => self.draw_falling(ctx),
 		}
 	}
-	fn draw_flipping(&mut self, ctx: &mut AppContext, state: &mut State) {
+	fn draw_flipping(&mut self, ctx: &mut AppContext) {
 		let flip_anim = self.flip_anim.borrow();
 
 		Sprite::from(&ctx.assets.board_flip)
@@ -322,8 +321,7 @@ impl Scene {
 		let frame = flip_anim.frame - (flip_frames - uv_frames) - 1;
 
 		if frame >= 0 {
-			self.back_board
-				.draw_displays(ctx, state, self.add_layer, frame);
+			self.back_board.draw_displays(ctx, self.add_layer, frame);
 		}
 	}
 	fn draw_falling(&mut self, ctx: &mut AppContext) {
@@ -570,15 +568,9 @@ impl BackBoard {
 	}
 	/// Draw displays onto the canvas
 	/// `frame` - controls which frame for each display UV will be picked
-	fn draw_displays(
-		&mut self,
-		ctx: &mut AppContext,
-		state: &mut State,
-		canvas: CanvasId,
-		frame: i32,
-	) {
+	fn draw_displays(&mut self, ctx: &mut AppContext, canvas: CanvasId, frame: i32) {
 		// Draw displays textures
-		self.titles_display.offscreen_draw(ctx, state);
+		self.titles_display.offscreen_draw(ctx);
 
 		// Draw movie display
 		let movie_uv = &ctx.assets.movie_display_uv;

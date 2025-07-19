@@ -12,6 +12,9 @@ impl Default for CharWidth {
 	}
 }
 
+// Allow because `FontLookup` is used only once per font so it is more optimal to store it in
+// the stack rather than in the heap (but i might be wrong)
+#[allow(clippy::large_enum_variant)]
 /// Font chars lookup table
 #[derive(Debug)]
 pub enum FontLookup {
