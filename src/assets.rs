@@ -100,7 +100,7 @@ fn populate_serif_font_lookup() -> FontLookup {
 	let upper_a_z: [u8; 25] = std::array::from_fn(|i| i as u8 + 1);
 
 	let mut lookup = [0; MAX_CHARS];
-	let mut widths = [CharWidth(1.0); MAX_CHARS];
+	let mut widths = [CharWidth::Normal; MAX_CHARS];
 
 	// A-Z
 	lookup[65..90].copy_from_slice(&upper_a_z);
@@ -108,10 +108,10 @@ fn populate_serif_font_lookup() -> FontLookup {
 	lookup[97..122].copy_from_slice(&upper_a_z.map(|n| n + 26));
 
 	for byte in b"iljft".iter() {
-		widths[*byte as usize] = CharWidth(0.5);
+		widths[*byte as usize] = CharWidth::Half;
 	}
 	for byte in b"IJsr".iter() {
-		widths[*byte as usize] = CharWidth(0.75);
+		widths[*byte as usize] = CharWidth::ThreeQuarters;
 	}
 
 	FontLookup::Custom(lookup, widths)

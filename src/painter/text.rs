@@ -4,12 +4,12 @@ use super::{BatchFlag, CanvasId, Painter, QUAD_FLIPPED_UV, texture::Texture};
 
 pub const MAX_CHARS: usize = 256;
 
-#[derive(Debug, Clone, Copy, PartialEq)]
-pub struct CharWidth(pub f32);
-impl Default for CharWidth {
-	fn default() -> Self {
-		Self(1.0)
-	}
+#[derive(Debug, Default, Clone, Copy, PartialEq)]
+pub enum CharWidth {
+	#[default]
+	Normal,
+	Half,
+	ThreeQuarters,
 }
 
 // Allow because `FontLookup` is used only once per font so it is more optimal to store it in
@@ -111,7 +111,11 @@ impl<'a> Text<'a> {
 			}
 			FontLookup::Custom(table, widths) => {
 				findex = table[byte as usize] as f32;
-				kerning *= widths[byte as usize].0;
+				match widths[byte as usize] {
+					CharWidth::Normal => (),
+					CharWidth::Half => kerning *= 0.5,
+					CharWidth::ThreeQuarters => kerning *= 0.75,
+				}
 			}
 		};
 
