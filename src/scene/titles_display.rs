@@ -46,6 +46,8 @@ impl TitlesDisplay {
 	pub fn offscreen_draw(&mut self, ctx: &mut AppContext) {
 		Sprite::from(&ctx.assets.titles_bg).draw(&mut ctx.painter, self.canvas);
 
+		ctx.input.set_cur_mouse_transform(Self::OFFSET, Self::SCALE);
 		self.scoundrel.draw(ctx, self.canvas);
+		ctx.input.reset_cur_mouse_transform();
 	}
 }

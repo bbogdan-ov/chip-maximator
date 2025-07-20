@@ -3,8 +3,6 @@
 //!
 //! You can read the rules here: http://www.stfj.net/art/2011/Scoundrel.pdf
 
-use miniquad::CursorIcon;
-
 use crate::{
 	app::AppContext,
 	math::{Point, ToStrBytes},
@@ -160,13 +158,11 @@ impl Card {
 /// Card sprite
 struct CardSprite {
 	inner: Sprite,
-	hovered: bool,
 }
 impl CardSprite {
 	fn new(ctx: &AppContext) -> Self {
 		Self {
 			inner: Sprite::from(&ctx.assets.card),
-			hovered: false,
 		}
 	}
 
@@ -174,16 +170,6 @@ impl CardSprite {
 		self.inner.frame = card.sprite_frame();
 	}
 
-	fn update(&mut self, ctx: &mut AppContext, mouse_pos: Point) {
-		self.hovered = false;
-
-		if !ctx.input.is_consumed() {
-			self.hovered = self.inner.rect().contains(&mouse_pos);
-			if self.hovered {
-				ctx.input.cursor_icon = CursorIcon::Pointer;
-			}
-		}
-	}
 	fn draw(&mut self, ctx: &mut AppContext, canvas: CanvasId) {
 		self.inner.draw(&mut ctx.painter, canvas);
 	}
@@ -237,8 +223,6 @@ impl Scoundrel {
 
 		let Some(ref room) = self.room else { return };
 
-		let mouse_pos = (ctx.input.mouse_pos() - TitlesDisplay::OFFSET) / TitlesDisplay::SCALE;
-
 		let mut hovered_card: Option<&Card> = None;
 
 		for (i, sprite) in self.card_sprites.iter_mut().enumerate() {
@@ -250,9 +234,7 @@ impl Scoundrel {
 			inner.pos.x += (i % 2) as f32 * (inner.size.x + GAP);
 			inner.pos.y += if i < 2 { 0.0 } else { inner.size.y + GAP };
 
-			sprite.update(ctx, mouse_pos);
-
-			if sprite.hovered {
+			if sprite.inner.is_hover(&mut ctx.input) {
 				hovered_card = Some(card);
 				sprite.inner.pos.y += -4.0;
 			}
