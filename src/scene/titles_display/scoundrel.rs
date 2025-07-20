@@ -3,9 +3,11 @@
 //!
 //! You can read the rules here: http://www.stfj.net/art/2011/Scoundrel.pdf
 
+use miniquad::CursorIcon;
+
 use crate::{
 	app::AppContext,
-	math::Point,
+	math::{Point, ToStrBytes},
 	painter::{CanvasId, Sprite, Text},
 };
 
@@ -114,6 +116,16 @@ enum CardKind {
 	/// Monster
 	Spade,
 }
+impl CardKind {
+	fn name(&self) -> &'static str {
+		match self {
+			Self::Diamonds => "weapon",
+			Self::Hearts => "potion",
+			Self::Club => "monster",
+			Self::Spade => "monster",
+		}
+	}
+}
 
 /// Card
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -126,6 +138,9 @@ impl Card {
 		Self { kind, grade }
 	}
 
+	fn name(&self) -> &'static str {
+		self.kind.name()
+	}
 	fn value(&self) -> u8 {
 		self.grade.value()
 	}
@@ -142,26 +157,61 @@ impl Card {
 	}
 }
 
+/// Card sprite
+struct CardSprite {
+	inner: Sprite,
+	hovered: bool,
+}
+impl CardSprite {
+	fn new(ctx: &AppContext) -> Self {
+		Self {
+			inner: Sprite::from(&ctx.assets.card),
+			hovered: false,
+		}
+	}
+
+	fn update_card(&mut self, card: &Card) {
+		self.inner.frame = card.sprite_frame();
+	}
+
+	fn update(&mut self, ctx: &mut AppContext, mouse_pos: Point) {
+		self.hovered = false;
+
+		if !ctx.input.is_consumed() {
+			self.hovered = self.inner.rect().contains(&mouse_pos);
+			if self.hovered {
+				ctx.input.cursor_icon = CursorIcon::Pointer;
+			}
+		}
+	}
+	fn draw(&mut self, ctx: &mut AppContext, canvas: CanvasId) {
+		self.inner.draw(&mut ctx.painter, canvas);
+	}
+}
+
 /// Scoundrel card game
 pub struct Scoundrel {
 	deck: [Option<Card>; DECK_CARDS],
 	room: Option<[Card; ROOM_CARDS]>,
 
-	card_sprites: [Sprite; ROOM_CARDS],
+	card_sprites: [CardSprite; ROOM_CARDS],
 }
 impl Scoundrel {
 	pub fn new(ctx: &AppContext) -> Self {
+		// Populate card sprites
+		let card_sprites = [(); ROOM_CARDS].map(|_| CardSprite::new(&ctx));
+
 		let mut game = Self {
 			deck: DEFAULT_DECK.map(|c| Some(c)),
 			room: None,
 
-			card_sprites: [(); ROOM_CARDS].map(|_| Sprite::from(&ctx.assets.card)),
+			card_sprites,
 		};
 
 		game.set_room([
 			DEFAULT_DECK[0],
-			DEFAULT_DECK[1],
-			DEFAULT_DECK[3],
+			DEFAULT_DECK[20],
+			DEFAULT_DECK[43],
 			DEFAULT_DECK[31],
 		]);
 
@@ -170,7 +220,7 @@ impl Scoundrel {
 
 	fn set_room(&mut self, cards: [Card; ROOM_CARDS]) {
 		for (i, card) in cards.iter().enumerate() {
-			self.card_sprites[i].frame = card.sprite_frame();
+			self.card_sprites[i].update_card(card);
 		}
 
 		self.room = Some(cards);
@@ -185,24 +235,42 @@ impl Scoundrel {
 		const GAP: f32 = 16.0;
 		const DS: f32 = TitlesDisplay::SIZE;
 
-		let Some(ref _room) = self.room else { return };
+		let Some(ref room) = self.room else { return };
 
-		let mpos = (ctx.input.mouse_pos - TitlesDisplay::OFFSET) / TitlesDisplay::SCALE;
+		let mouse_pos = (ctx.input.mouse_pos - TitlesDisplay::OFFSET) / TitlesDisplay::SCALE;
+
+		let mut hovered_card: Option<&Card> = None;
 
 		for (i, sprite) in self.card_sprites.iter_mut().enumerate() {
-			sprite.pos.y = GAP + if i < 2 { 0.0 } else { sprite.size.y + GAP };
+			let card = &room[i];
 
-			if sprite.rect().contains(&mpos) {
-				sprite.pos.y += -4.0;
+			// Stack cards in a 2x2 grid
+			let inner = &mut sprite.inner;
+			inner.pos.set(GAP, GAP);
+			inner.pos.x += (i % 2) as f32 * (inner.size.x + GAP);
+			inner.pos.y += if i < 2 { 0.0 } else { inner.size.y + GAP };
+
+			sprite.update(ctx, mouse_pos);
+
+			if sprite.hovered {
+				hovered_card = Some(card);
+				sprite.inner.pos.y += -4.0;
 			}
 
-			sprite.pos.x = GAP + (i % 2) as f32 * (sprite.size.x + GAP);
-			sprite.draw(&mut ctx.painter, canvas);
+			sprite.draw(ctx, canvas);
 		}
 
-		Text::new(&ctx.assets.ibm_font)
-			.with_font_size(2.0)
-			.with_pos((GAP, DS - 24.0))
-			.draw_chars(&mut ctx.painter, canvas, b"clubs - 10");
+		// Draw currently hovered card name and value
+		if let Some(card) = hovered_card {
+			let name = card.name();
+			let value = card.value();
+
+			Text::new(&ctx.assets.ibm_font)
+				.with_font_size(2.0)
+				.with_pos((GAP, DS - 24.0))
+				.draw_chars(&mut ctx.painter, canvas, name.as_bytes())
+				.draw_chars(&mut ctx.painter, canvas, b" - ")
+				.draw_chars(&mut ctx.painter, canvas, &value.to_str_bytes());
+		}
 	}
 }
