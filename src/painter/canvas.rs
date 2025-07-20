@@ -87,13 +87,8 @@ impl super::PainterContext {
 	) -> CanvasId {
 		self.impl_new_canvas(size, color, opts, true)
 	}
-	pub fn new_canvas_no_clear(
-		&mut self,
-		size: impl Into<Point>,
-		color: impl Into<Color>,
-		opts: TextureOpts,
-	) -> CanvasId {
-		self.impl_new_canvas(size, color, opts, false)
+	pub fn new_canvas_no_clear(&mut self, size: impl Into<Point>, opts: TextureOpts) -> CanvasId {
+		self.impl_new_canvas(size, Color::TRANSPARENT, opts, false)
 	}
 
 	pub fn apply_canvas(&self, canvas: Option<CanvasId>) {
