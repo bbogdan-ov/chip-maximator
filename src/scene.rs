@@ -555,6 +555,8 @@ impl BackBoard {
 		}
 
 		self.anim.update(&ctx.time);
+
+		self.titles_display.update(ctx);
 	}
 
 	fn draw(&mut self, ctx: &mut AppContext, canvas: CanvasId) {

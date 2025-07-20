@@ -1,15 +1,27 @@
+mod scoundrel;
+
+use scoundrel::*;
+
 use crate::{
 	app::AppContext,
-	math::Color,
-	painter::{CanvasId, Sprite, Text, TextureOpts},
+	math::{Color, Point},
+	painter::{CanvasId, Sprite, TextureOpts},
 };
 
 /// Back board titles display
 pub struct TitlesDisplay {
 	pub canvas: CanvasId,
+
+	scoundrel: Scoundrel,
 }
 impl TitlesDisplay {
 	const SIZE: f32 = 256.0;
+
+	/// Hard-coded top-left position of the display relative to the window top-left corner
+	/// There is no way i could (while maintaining performance) calculate the offset
+	const OFFSET: Point = Point::new(144.0, 136.0);
+	/// Hard-coded and randomly picked canvas scale relative to the window
+	const SCALE: f32 = 0.77;
 
 	pub fn new(ctx: &mut AppContext) -> Self {
 		Self {
@@ -22,20 +34,18 @@ impl TitlesDisplay {
 					mag_nearest: false,
 				},
 			),
+
+			scoundrel: Scoundrel::new(ctx),
 		}
+	}
+
+	pub fn update(&mut self, ctx: &mut AppContext) {
+		self.scoundrel.update(ctx);
 	}
 
 	pub fn offscreen_draw(&mut self, ctx: &mut AppContext) {
 		Sprite::from(&ctx.assets.titles_bg).draw(&mut ctx.painter, self.canvas);
 
-		Text::new(&ctx.assets.serif_font)
-			.with_pos((10.0, 10.0))
-			.with_fg(Color::BLACK)
-			.with_bg(Color::TRANSPARENT)
-			.draw_line(&mut ctx.painter, self.canvas, b"Thank you");
-
-		Text::new(&ctx.assets.ibm_font)
-			.with_pos((10.0, 50.0))
-			.draw_line(&mut ctx.painter, self.canvas, b"Thank you");
+		self.scoundrel.draw(ctx, self.canvas);
 	}
 }
