@@ -1,4 +1,8 @@
-use crate::{app::AppContext, assets::Assets, math::Point};
+use crate::{
+	app::AppContext,
+	assets::Assets,
+	math::{Color, Point},
+};
 
 use super::{CanvasId, Sprite};
 
@@ -37,6 +41,10 @@ impl Icon {
 	}
 	pub fn with_flip(mut self, flip: impl Into<Point<bool>>) -> Self {
 		self.inner = self.inner.with_flip(flip);
+		self
+	}
+	pub fn with_color(mut self, color: impl Into<Color>) -> Self {
+		self.inner = self.inner.with_fg(color);
 		self
 	}
 
