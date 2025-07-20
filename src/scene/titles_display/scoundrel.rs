@@ -5,7 +5,7 @@
 
 use crate::{
 	app::AppContext,
-	math::{Point, ToStrBytes},
+	math::{Color, Point, ToStrBytes},
 	painter::{CanvasId, Sprite, Text},
 };
 
@@ -247,9 +247,10 @@ impl Scoundrel {
 			let name = card.name();
 			let value = card.value();
 
-			Text::new(&ctx.assets.ibm_font)
-				.with_font_size(2.0)
-				.with_pos((GAP, DS - 24.0))
+			Text::new(&ctx.assets.serif_font)
+				.with_fg(Color::BLACK)
+				.with_bg(Color::TRANSPARENT)
+				.with_pos((GAP, DS - 40.0))
 				.draw_chars(&mut ctx.painter, canvas, name.as_bytes())
 				.draw_chars(&mut ctx.painter, canvas, b" - ")
 				.draw_chars(&mut ctx.painter, canvas, &value.to_str_bytes());
