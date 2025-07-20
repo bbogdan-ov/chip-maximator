@@ -572,14 +572,6 @@ impl BackBoard {
 		// Draw displays textures
 		self.titles_display.offscreen_draw(ctx);
 
-		// Draw movie display
-		let movie_uv = &ctx.assets.movie_display_uv;
-		Sprite::from(ctx.painter.canvas(self.titles_display.canvas))
-			.with_uv(movie_uv.id)
-			.with_frames_count(movie_uv.frames)
-			.with_frame((frame, 0))
-			.draw(&mut ctx.painter, canvas);
-
 		// Draw titles display
 		let titles_uv = &ctx.assets.titles_display_uv;
 		Sprite::from(ctx.painter.canvas(self.titles_display.canvas))
