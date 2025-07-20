@@ -42,17 +42,28 @@ macro_rules! include_sound_data {
 }
 
 /// Sound
-pub struct Sound {
-	sink: Sink,
+pub enum Sound {
+	Normal { sink: Sink },
+	Muted,
 }
 impl Sound {
 	pub fn play(&self) {
-		self.sink.play();
+		match self {
+			Self::Normal { sink } => sink.play(),
+			Self::Muted => (),
+		}
 	}
 	pub fn pause(&self) {
-		self.sink.pause();
+		match self {
+			Self::Normal { sink } => sink.pause(),
+			Self::Muted => (),
+		}
 	}
 	pub fn set_playing(&self, play: bool) {
+		if !matches!(self, Self::Normal { .. }) {
+			return;
+		}
+
 		if self.is_playing() != play {
 			if play {
 				self.play();
@@ -63,21 +74,37 @@ impl Sound {
 	}
 
 	pub fn set_volume(&self, volume: f32) {
-		self.sink.set_volume(volume);
+		match self {
+			Self::Normal { sink } => sink.set_volume(volume),
+			Self::Muted => (),
+		}
 	}
 
 	pub fn is_playing(&self) -> bool {
-		!self.sink.is_paused()
+		match self {
+			Self::Normal { sink } => !sink.is_paused(),
+			Self::Muted => false,
+		}
 	}
 }
 
 /// Audio manager
-pub struct Audio {
-	stream: OutputStream,
-	sinks: [Sink; SINKS_COUNT],
+pub enum Audio {
+	Normal {
+		stream: OutputStream,
+		sinks: [Sink; SINKS_COUNT],
+	},
+	Muted,
 }
 impl Audio {
-	pub fn new() -> Self {
+	pub fn new(muted: bool) -> Self {
+		if muted {
+			Self::Muted
+		} else {
+			Self::new_normal()
+		}
+	}
+	fn new_normal() -> Self {
 		let stream = OutputStreamBuilder::open_default_stream().unwrap();
 
 		// Populate N number of sinks
@@ -91,15 +118,24 @@ impl Audio {
 		buzz_sink.append(TriangleWave::new(200.0).high_pass(500).amplify(0.2));
 		buzz_sink.pause();
 
-		Self { stream, sinks }
+		Self::Normal { stream, sinks }
 	}
+
 	pub fn new_sound<S: Source + Send + 'static>(&mut self, source: S) -> Sound {
-		let sink = Sink::connect_new(self.stream.mixer());
+		let Self::Normal { stream, .. } = self else {
+			return Sound::Muted;
+		};
+
+		let sink = Sink::connect_new(stream.mixer());
 		sink.append(source);
 		sink.pause();
-		Sound { sink }
+		Sound::Normal { sink }
 	}
 	pub fn new_sound_from_vorbis(&mut self, data: SoundData, looped: bool) -> Sound {
+		if !matches!(self, Self::Normal { .. }) {
+			return Sound::Muted;
+		};
+
 		let buf = SamplesBuffer::new(1, super::SAMPLERATE, data.0);
 
 		if looped {
@@ -110,8 +146,12 @@ impl Audio {
 	}
 
 	pub fn play(&mut self, data: SoundData) {
+		let Self::Normal { sinks, .. } = self else {
+			return;
+		};
+
 		// Find the first empty sink
-		let Some(sink) = self.sinks.iter().find(|s| s.empty()) else {
+		let Some(sink) = sinks.iter().find(|s| s.empty()) else {
 			return;
 		};
 

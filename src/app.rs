@@ -80,7 +80,9 @@ impl App {
 		let mut painter = Painter::new().unwrap_or_else(|e| {
 			panic!("failed to initialize painter: {e}");
 		});
-		let audio = Audio::new();
+
+		// TODO: allow to mute audio by passing cli args
+		let audio = Audio::new(false);
 
 		let canvas = painter.context.new_canvas(
 			(CANVAS_WIDTH, CANVAS_HEIGHT),
