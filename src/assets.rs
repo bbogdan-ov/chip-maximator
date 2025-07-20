@@ -96,7 +96,7 @@ macro_rules! assets {
 	};
 }
 
-fn populate_serif_font_lookup() -> FontLookup {
+fn serif_font_lookup() -> FontLookup {
 	let upper_a_z: [u8; 25] = std::array::from_fn(|i| i as u8 + 1);
 
 	let mut lookup = [0; MAX_CHARS];
@@ -147,7 +147,7 @@ assets! {
 	}
 	fonts {
 		ibm_font => "ibm-font", 8, 8, 256, false, FontLookup::Ascii,
-		serif_font => "serif-font", 26, 40, 60, true, {populate_serif_font_lookup()},
+		serif_font => "serif-font", 26, 40, 60, true, {serif_font_lookup()},
 	}
 	sounds {
 		// FIXME: key press/release sounds are kinda bad
