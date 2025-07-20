@@ -133,6 +133,7 @@ assets! {
 		heated_cpu => "heated-cpu", 74, 71, 1, 1,
 		link => "link", 53, 53, 3, 2,
 		slot => "slot", 126, 119, 2, 1,
+		titles_bg => "titles-bg", 256, 256, 1, 1,
 
 		registers_display_uv => "registers-display-uv", 700, 700, 1, 1,
 		game_display_uv => "game-display-uv", 700, 700, 1, 1,
