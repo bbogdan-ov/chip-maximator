@@ -41,7 +41,7 @@ impl Rect<f32> {
 
 	/// Changes cursor icon to pointer and returns whether the mouse is hovering the rect
 	pub fn is_hover(&self, input: &mut Input) -> bool {
-		if !input.is_consumed() && self.contains(&input.mouse_pos) {
+		if !input.is_consumed() && self.contains(&input.mouse_pos()) {
 			input.cursor_icon = CursorIcon::Pointer;
 			true
 		} else {

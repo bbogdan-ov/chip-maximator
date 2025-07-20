@@ -237,7 +237,7 @@ impl Scoundrel {
 
 		let Some(ref room) = self.room else { return };
 
-		let mouse_pos = (ctx.input.mouse_pos - TitlesDisplay::OFFSET) / TitlesDisplay::SCALE;
+		let mouse_pos = (ctx.input.mouse_pos() - TitlesDisplay::OFFSET) / TitlesDisplay::SCALE;
 
 		let mut hovered_card: Option<&Card> = None;
 

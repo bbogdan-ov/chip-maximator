@@ -103,7 +103,7 @@ impl Sprite {
 
 	/// Changes cursor icon to pointer and returns whether the mouse is hovering the sprite
 	pub fn is_hover(&self, input: &mut Input) -> bool {
-		if !input.is_consumed() && self.rect().contains(&input.mouse_pos) {
+		if !input.is_consumed() && self.rect().contains(&input.mouse_pos()) {
 			input.cursor_icon = CursorIcon::Pointer;
 			true
 		} else {

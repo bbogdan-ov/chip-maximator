@@ -16,7 +16,7 @@ bitflags::bitflags! {
 /// Input manager
 pub struct Input {
 	/// Mouse position relative to the canvas
-	pub mouse_pos: Point,
+	mouse_pos: Point,
 	/// Mouse position relative to the canvas on the last frame
 	pub mouse_last_pos: Point,
 	pub mouse_movement: Point,
@@ -28,6 +28,9 @@ pub struct Input {
 	pub key_just_pressed: bool,
 	pub keys_pressed: HashSet<KeyCode>,
 	pub keys_just_released: HashSet<KeyCode>,
+
+	pub cur_mouse_offset: Point,
+	pub cur_mouse_pos_scale: f32,
 
 	pub consumed_by: InputConsume,
 	/// Cursor icon to apply at the frame end
@@ -47,6 +50,9 @@ impl Default for Input {
 			key_just_pressed: false,
 			keys_pressed: HashSet::default(),
 			keys_just_released: HashSet::default(),
+
+			cur_mouse_offset: Point::default(),
+			cur_mouse_pos_scale: 1.0,
 
 			consumed_by: InputConsume::default(),
 			cursor_icon: CursorIcon::Default,
@@ -100,6 +106,21 @@ impl Input {
 	/// Returns whether the key was released
 	pub fn key_just_released(&self, key: KeyCode) -> bool {
 		!self.is_consumed() && self.keys_just_released.contains(&key)
+	}
+
+	pub fn set_cur_mouse_transform(&mut self, offset: Point, scale: f32) {
+		self.cur_mouse_offset = offset;
+		self.cur_mouse_pos_scale = scale;
+	}
+	pub fn reset_cur_mouse_transform(&mut self) {
+		self.set_cur_mouse_transform(Point::default(), 1.0);
+	}
+
+	pub fn set_mouse_pos(&mut self, x: f32, y: f32) {
+		self.mouse_pos.set(x, y);
+	}
+	pub fn mouse_pos(&self) -> Point {
+		(self.mouse_pos - self.cur_mouse_offset) / self.cur_mouse_pos_scale
 	}
 
 	pub fn consume(&mut self, mask: InputConsume, consume: bool) {
