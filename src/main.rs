@@ -32,9 +32,5 @@ fn main() {
 		..Default::default()
 	};
 
-	// Initialize the audio manager before creating the window because `rodio` only initializes
-	// at the start of the program and not later, for some reason
-	// let audio = Audio::new();
-
 	miniquad::start(conf, move || Box::new(App::new()));
 }
