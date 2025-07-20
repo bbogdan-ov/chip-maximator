@@ -82,7 +82,7 @@ impl App {
 		});
 
 		// TODO: allow to mute audio by passing cli args
-		let audio = Audio::new(false);
+		let audio = Audio::new(cfg!(debug_assertions));
 
 		let canvas = painter.context.new_canvas(
 			(CANVAS_WIDTH, CANVAS_HEIGHT),
