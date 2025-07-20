@@ -168,7 +168,7 @@ assets! {
 
 		explosion => "explosion", 175, 175, 16, 1,
 
-		icons => "icons", 32, 32, 2, 4,
+		icons => "icons", 32, 32, 3, 4,
 	}
 	fonts {
 		ibm_font => "ibm-font", 8, 8, 256, false, FontLookup::Ascii,

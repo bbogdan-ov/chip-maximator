@@ -7,12 +7,14 @@ use super::{CanvasId, Sprite};
 pub enum IconKind {
 	Flip,
 	Pointer,
+	Heart,
 }
 impl IconKind {
 	pub fn into_frame(self) -> i32 {
 		match self {
 			Self::Flip => 0,
 			Self::Pointer => 1,
+			Self::Heart => 2,
 		}
 	}
 }
