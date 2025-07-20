@@ -114,10 +114,6 @@ impl Audio {
 			sink
 		});
 
-		let buzz_sink = Sink::connect_new(stream.mixer());
-		buzz_sink.append(TriangleWave::new(200.0).high_pass(500).amplify(0.2));
-		buzz_sink.pause();
-
 		Self::Normal { stream, sinks }
 	}
 
