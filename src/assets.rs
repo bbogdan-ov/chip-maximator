@@ -97,20 +97,43 @@ macro_rules! assets {
 }
 
 fn serif_font_lookup() -> FontLookup {
-	let upper_a_z: [u8; 25] = std::array::from_fn(|i| i as u8 + 1);
+	let upper_a_z: [u8; 26] = std::array::from_fn(|i| i as u8);
+	let numbers: [u8; 10] = std::array::from_fn(|i| i as u8);
 
 	let mut lookup = [0; MAX_CHARS];
 	let mut widths = [CharWidth::Normal; MAX_CHARS];
 
-	// A-Z
-	lookup[65..90].copy_from_slice(&upper_a_z);
-	// a-z
-	lookup[97..122].copy_from_slice(&upper_a_z.map(|n| n + 26));
+	// Skip the first blank char
+	let mut offset = 1_u8;
 
-	for byte in b"iljft".iter() {
+	// A-Z
+	lookup[65..=90].copy_from_slice(&upper_a_z.map(|n| n + offset));
+	offset += 26;
+	// a-z
+	lookup[97..=122].copy_from_slice(&upper_a_z.map(|n| n + offset));
+	offset += 26;
+	// 0-9
+	lookup[48..=57].copy_from_slice(&numbers.map(|n| n + offset));
+	offset += 10;
+	// .
+	lookup[46] = offset;
+	offset += 1;
+	// ,
+	lookup[44] = offset;
+	offset += 1;
+	// -
+	lookup[45] = offset;
+	offset += 1;
+	// !
+	lookup[33] = offset;
+	offset += 1;
+	// ?
+	lookup[63] = offset;
+
+	for byte in b" iljft-,.!?".iter() {
 		widths[*byte as usize] = CharWidth::Half;
 	}
-	for byte in b"IJsr".iter() {
+	for byte in b"IJsrpeao1".iter() {
 		widths[*byte as usize] = CharWidth::ThreeQuarters;
 	}
 
@@ -149,7 +172,7 @@ assets! {
 	}
 	fonts {
 		ibm_font => "ibm-font", 8, 8, 256, false, FontLookup::Ascii,
-		serif_font => "serif-font", 26, 40, 60, true, {serif_font_lookup()},
+		serif_font => "serif-font", 26, 40, 72, true, {serif_font_lookup()},
 	}
 	sounds {
 		// FIXME: key press/release sounds are kinda bad
