@@ -12,6 +12,7 @@ pub enum IconKind {
 	Flip,
 	Pointer,
 	Heart,
+	Sword,
 }
 impl IconKind {
 	pub fn into_frame(self) -> i32 {
@@ -19,6 +20,7 @@ impl IconKind {
 			Self::Flip => 0,
 			Self::Pointer => 1,
 			Self::Heart => 2,
+			Self::Sword => 3,
 		}
 	}
 }
