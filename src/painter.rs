@@ -185,16 +185,19 @@ impl Painter {
 		self.draw();
 
 		// Clear all not damaged canvases
-		for (id, canvas) in self.context.canvases.iter().enumerate() {
-			if !canvas.damaged {
-				self.clear(Some(CanvasId(id)));
+		for id in 0..self.context.canvases.len() {
+			let id = CanvasId(id);
+			if !self.canvas(id).damaged {
+				self.clear(Some(id));
 			}
 		}
 	}
 
 	/// FIXME: this code is mostly the same as in [`Painter::draw`]
-	fn clear(&self, canvas: Option<CanvasId>) {
+	pub fn clear(&mut self, canvas: Option<CanvasId>) {
 		let CanvasData { color, size, .. } = self.canvas_data(canvas);
+
+		self.draw();
 
 		self.context.apply_canvas(canvas);
 
