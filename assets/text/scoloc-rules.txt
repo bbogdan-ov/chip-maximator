@@ -1,0 +1,122 @@
+SCOLOC card game
+
+-- You
+  You have 20 health
+points and it can not
+go beyond 20.
+  You have a weapon
+points. How strong
+your weapon is.
+
+-- Deck
+  You have a deck of
+classic playing cards.
+  Except Jokers, Red
+Face Cards and Red
+Aces. 44 cards in
+total.
+  The deck is
+randomly shuffled.
+
+-- Rooms
+  Rooms consist of 4
+cards.
+  Cards are taken
+from the top of the
+deck.
+  You will go to
+a next room if there
+is no cards in the
+current one or if
+you ran away.
+
+-- Running
+  You can run away
+from any room as
+many times as you
+want, but not 2
+times in a row.
+  All the remainig
+cards in the room
+will be moved to the
+bottom of the deck.
+
+-- Cards
+  There are 3 types
+of cards. Health
+potions - hearts,
+weapons - diamonds
+and monsters - clubs
+and spades.
+  Value of a card
+represents how many
+health it heals,
+protects you and
+deals damange to
+you respectively.
+
+-- Potions/hearts
+  Restores your
+health points by
+value of the card.
+  Can not be used
+more than one time
+in a row.
+  Can not heal
+beyond 20 health
+points.
+
+-- Weapons/diamonds
+  When picked, sets
+weapon points equal
+to value of the card.
+  Picking a monster
+card will calcluate
+the difference
+between its value
+and your weapon
+points. The result
+is how much damage
+you will take
+  After killing a
+monster its card will
+be added to the
+stack under your
+weapon points. Value
+of the last card is
+how strong your
+weapon became.
+  If your stack is
+not empty and you
+kill a monster with
+value less and not
+equal to value of
+the last stack card,
+you will take no
+damage and the
+killed monster will
+be added to the
+stack.
+  If your stack is
+not empty and you
+kill a monster with
+value equal or greater
+to value of the last
+stack card, you will
+take the full
+damage, your
+stack will be cleared
+and weapon points
+will be set to 0
+
+-- Winnig
+  You will win if
+all the rooms are
+completed. In other
+words, if there is
+no more cards in
+the deck.
+
+-- Losing
+  You will lose if your
+health is 0

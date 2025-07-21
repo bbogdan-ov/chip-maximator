@@ -19,6 +19,21 @@ const DECK_CARDS: usize = 52 - 8;
 const ROOM_CARDS: usize = 4;
 const MAX_HEALTH: u8 = 20;
 
+const RULES: &str = include_str!("../../../assets/text/scoloc-rules.txt");
+const RULES_LINES: usize = {
+	// Count number of newline chars
+	let bytes = RULES.as_bytes();
+	let mut num = 0;
+	let mut i = 0;
+	while i < bytes.len() {
+		if bytes[i] == b'\n' {
+			num += 1;
+		}
+		i += 1;
+	}
+	num
+};
+
 #[rustfmt::skip]
 const DEFAULT_DECK: [Card; DECK_CARDS] = [
 	Card::new(CardKind::Spade, CardGrade::Two),
@@ -266,6 +281,7 @@ pub struct Scoundrel {
 	picked_card_idx: Option<usize>,
 	distorting: bool,
 
+	rules_opened: bool,
 	alert_tween_y: Tweenable,
 	alert_kind: Option<AlertKind>,
 
@@ -303,6 +319,7 @@ impl Scoundrel {
 			picked_card_idx: None,
 			distorting: false,
 
+			rules_opened: false,
 			alert_tween_y: Tweenable::new(-TitlesDisplay::SIZE),
 			alert_kind: None,
 
@@ -427,7 +444,7 @@ impl Scoundrel {
 
 		self.hovered_card_idx = None;
 
-		if self.alert_kind.is_some() {
+		if self.paused() {
 			return;
 		}
 
@@ -480,6 +497,7 @@ impl Scoundrel {
 		self.draw_description(ctx, canvas);
 
 		self.draw_alert(ctx, canvas);
+		self.draw_rules(ctx, canvas);
 
 		self.draw_buttons(ctx, canvas);
 	}
@@ -551,13 +569,13 @@ impl Scoundrel {
 		const TUTORIAL_BTN: Rect = Rect::new_xywh(DS - BTN_W * 2.0, 0.0, BTN_W, BTN_H);
 
 		if CLOSE_BTN.is_hover(&mut ctx.input) && ctx.input.left_just_pressed() {
-			println!("close");
+			self.rules_opened = false;
 		}
 		if TUTORIAL_BTN.is_hover(&mut ctx.input) && ctx.input.left_just_pressed() {
-			println!("tutor");
+			self.rules_opened ^= true;
 		}
 
-		if !self.prev_ran && self.alert_kind.is_none() {
+		if !self.prev_ran && !self.paused() {
 			if RUN_BTN.is_hover(&mut ctx.input) && ctx.input.left_just_pressed() {
 				self.run();
 			}
@@ -613,6 +631,7 @@ impl Scoundrel {
 				.draw_chars(&mut ctx.painter, canvas, &card.grade.value().to_str_bytes());
 		}
 	}
+
 	fn draw_alert(&self, ctx: &mut AppContext, canvas: CanvasId) {
 		let Some(kind) = self.alert_kind else {
 			return;
@@ -636,5 +655,34 @@ impl Scoundrel {
 			.with_font_size(2.0)
 			.with_pos((16.0, Y + 46.0 + *self.alert_tween_y))
 			.draw_chars(&mut ctx.painter, canvas, subtitle.as_bytes());
+	}
+	fn draw_rules(&self, ctx: &mut AppContext, canvas: CanvasId) {
+		const DS: f32 = TitlesDisplay::SIZE;
+		const PADDING: f32 = 24.0;
+		const FONT_SIZE: f32 = 0.65;
+
+		if !self.rules_opened {
+			return;
+		}
+
+		let serif = &ctx.assets.serif_font;
+
+		let scroll_h = RULES_LINES as f32 * (serif.size.y * FONT_SIZE);
+		let scrollf = (ctx.input.mouse_pos().y / DS).clamp(0.0, 1.0);
+		let scroll = ((scroll_h - DS + PADDING).max(0.0) * scrollf).floor();
+
+		Sprite::new(ctx.painter.white_texture, (DS, DS))
+			.with_fg(Color::hex(0xba1062))
+			.draw(&mut ctx.painter, canvas);
+
+		Text::new(serif)
+			.with_pos((6.0, PADDING - scroll))
+			.with_font_size(FONT_SIZE)
+			.with_bg(Color::TRANSPARENT)
+			.draw_str(&mut ctx.painter, canvas, RULES);
+	}
+
+	fn paused(&self) -> bool {
+		self.alert_kind.is_some() || self.rules_opened
 	}
 }
