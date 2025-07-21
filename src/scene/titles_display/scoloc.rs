@@ -471,6 +471,11 @@ impl Scoundrel {
 			}
 		}
 	}
+	fn reset(&mut self, ctx: &mut AppContext) {
+		// FIXME: not the most elegant way to reset the state...
+		//        it will cause a new vector allocations
+		*self = Self::new(ctx);
+	}
 
 	pub fn offscreen_draw(&mut self, ctx: &mut AppContext) {
 		if !self.distorting {
@@ -579,6 +584,7 @@ impl Scoundrel {
 				self.rules_opened = false;
 			} else {
 				*screen = Screen::default();
+				self.reset(ctx);
 			}
 		}
 		if TUTORIAL_BTN.is_hover(&mut ctx.input) && ctx.input.left_just_pressed() {
