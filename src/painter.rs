@@ -187,7 +187,8 @@ impl Painter {
 		// Clear all not damaged canvases
 		for id in 0..self.context.canvases.len() {
 			let id = CanvasId(id);
-			if !self.canvas(id).damaged {
+			let canvas = self.canvas(id);
+			if !canvas.damaged && canvas.data.clear {
 				self.clear(Some(id));
 			}
 		}
