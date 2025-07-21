@@ -131,6 +131,13 @@ impl CardKind {
 	}
 }
 
+/// Alert kind
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum AlertKind {
+	GameOver,
+	Win,
+}
+
 /// Card
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 struct Card {
@@ -260,6 +267,9 @@ pub struct Scoundrel {
 	picked_card_idx: Option<usize>,
 	distorting: bool,
 
+	alert_tween_y: Tweenable,
+	alert_kind: Option<AlertKind>,
+
 	card_sprites: [CardSprite; ROOM_CARDS],
 	distort_canvas: CanvasId,
 }
@@ -286,6 +296,9 @@ impl Scoundrel {
 			picked_card_idx: None,
 			distorting: false,
 
+			alert_tween_y: Tweenable::new(-TitlesDisplay::SIZE),
+			alert_kind: None,
+
 			card_sprites,
 			distort_canvas: ctx.painter.context.new_canvas_no_clear(
 				(TitlesDisplay::SIZE, TitlesDisplay::SIZE),
@@ -298,6 +311,11 @@ impl Scoundrel {
 	}
 
 	fn next_room(&mut self) {
+		if self.deck.is_empty() {
+			self.set_alert(AlertKind::Win);
+			return;
+		}
+
 		// Take last 4 cards from the deck
 		let end = self.deck.len();
 		let start = end.saturating_sub(4);
@@ -384,10 +402,27 @@ impl Scoundrel {
 		}
 
 		self.health = self.health.saturating_sub(damage);
+		if self.health == 0 {
+			self.set_alert(AlertKind::GameOver);
+		}
+	}
+
+	fn set_alert(&mut self, kind: AlertKind) {
+		self.alert_tween_y.value = -TitlesDisplay::SIZE;
+		self.alert_tween_y
+			.play(0.0, Duration::from_millis(1000), Easing::Linear);
+
+		self.alert_kind = Some(kind);
 	}
 
 	pub fn update(&mut self, ctx: &mut AppContext) {
+		self.alert_tween_y.update(&ctx.time);
+
 		self.hovered_card_idx = None;
+
+		if self.alert_kind.is_some() {
+			return;
+		}
 
 		// Check for an empty room inside update
 		if self.room_cards == 0 {
@@ -436,6 +471,8 @@ impl Scoundrel {
 		self.draw_stat(ctx, canvas, 56.0, IconKind::Sword, self.weapon);
 		self.draw_killed_monsters(ctx, canvas);
 		self.draw_description(ctx, canvas);
+
+		self.draw_alert(ctx, canvas);
 
 		self.draw_buttons(ctx, canvas);
 	}
@@ -513,7 +550,7 @@ impl Scoundrel {
 			println!("tutor");
 		}
 
-		if !self.prev_ran {
+		if !self.prev_ran && self.alert_kind.is_none() {
 			if RUN_BTN.is_hover(&mut ctx.input) && ctx.input.left_just_pressed() {
 				self.run();
 			}
@@ -568,5 +605,29 @@ impl Scoundrel {
 				.draw_chars(&mut ctx.painter, canvas, b" - ")
 				.draw_chars(&mut ctx.painter, canvas, &card.grade.value().to_str_bytes());
 		}
+	}
+	fn draw_alert(&self, ctx: &mut AppContext, canvas: CanvasId) {
+		let Some(kind) = self.alert_kind else {
+			return;
+		};
+
+		const DS: f32 = TitlesDisplay::SIZE;
+		const Y: f32 = DS - 78.0;
+
+		let (title, subtitle, bg) = match kind {
+			AlertKind::GameOver => ("GAME OVER", " oh no ", Color::new(1.0, 0.0, 0.0)),
+			AlertKind::Win => ("GREAT", " yeah ", Color::new(0.0, 1.0, 0.0)),
+		};
+
+		Text::new(&ctx.assets.serif_font)
+			.with_pos((16.0, Y + *self.alert_tween_y))
+			.with_fg(Color::BLACK)
+			.with_bg(bg)
+			.draw_chars(&mut ctx.painter, canvas, title.as_bytes());
+
+		Text::new(&ctx.assets.ibm_font)
+			.with_font_size(2.0)
+			.with_pos((16.0, Y + 46.0 + *self.alert_tween_y))
+			.draw_chars(&mut ctx.painter, canvas, subtitle.as_bytes());
 	}
 }
