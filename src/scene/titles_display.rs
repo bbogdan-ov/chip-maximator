@@ -1,6 +1,8 @@
 mod scoloc;
+mod titles;
 
 use scoloc::*;
+use titles::*;
 
 use crate::{
 	app::AppContext,
@@ -22,6 +24,7 @@ pub struct TitlesDisplay {
 
 	cur_screen: Screen,
 	scoundrel: Scoundrel,
+	titles: Titles,
 }
 impl TitlesDisplay {
 	const SIZE: f32 = 256.0;
@@ -46,6 +49,7 @@ impl TitlesDisplay {
 
 			cur_screen: Screen::default(),
 			scoundrel: Scoundrel::new(ctx),
+			titles: Titles::new(),
 		}
 	}
 
@@ -64,7 +68,7 @@ impl TitlesDisplay {
 		ctx.input.set_cur_mouse_transform(Self::OFFSET, Self::SCALE);
 
 		match self.cur_screen {
-			Screen::Titles => self.draw_titles(ctx, self.canvas),
+			Screen::Titles => self.titles.draw(ctx, self.canvas),
 			Screen::Scoloc => {
 				self.scoundrel.offscreen_draw(ctx);
 				self.scoundrel.draw(ctx, self.canvas, &mut self.cur_screen);
@@ -72,16 +76,5 @@ impl TitlesDisplay {
 		}
 
 		ctx.input.reset_cur_mouse_transform();
-	}
-
-	fn draw_titles(&mut self, ctx: &mut AppContext, canvas: CanvasId) {
-		// Draw background image
-		Sprite::from(&ctx.assets.titles_bg).draw(&mut ctx.painter, self.canvas);
-
-		Text::new(&ctx.assets.serif_font)
-			.with_pos((8.0, 8.0))
-			.with_fg(Color::BLACK)
-			.with_bg(Color::TRANSPARENT)
-			.draw_chars(&mut ctx.painter, canvas, b"Thank you");
 	}
 }
