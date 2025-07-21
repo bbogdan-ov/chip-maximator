@@ -1,4 +1,5 @@
 //! SCOLOC card game
+//! Scoundrel with slightly modified rules
 //!
 //! Inspired by simple but super fun card games:
 //! - http://www.stfj.net/art/2011/Scoundrel.pdf
