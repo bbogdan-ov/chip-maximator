@@ -500,9 +500,16 @@ impl Scoundrel {
 			.draw_chars(&mut ctx.painter, canvas, b"[?]");
 	}
 	fn draw_room(&mut self, ctx: &mut AppContext, canvas: CanvasId) {
-		for (i, sprite) in self.card_sprites.iter().enumerate() {
-			if self.room[i].is_none() {
+		for (i, sprite) in self.card_sprites.iter_mut().enumerate() {
+			let Some(card) = self.room[i] else {
 				continue;
+			};
+
+			// Dim hearts cards if potion was used on the prev step
+			if self.used_potion && card.kind == CardKind::Hearts {
+				sprite.inner.foreground = Color::gray(0.5);
+			} else {
+				sprite.inner.foreground = Color::WHITE;
 			}
 
 			sprite.draw(ctx, canvas);
