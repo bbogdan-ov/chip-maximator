@@ -1,7 +1,8 @@
-//! SCOUNDREL card game
-//! This is a simple but a super fun card game
+//! SCOLOC card game
 //!
-//! You can read the rules here: http://www.stfj.net/art/2011/Scoundrel.pdf
+//! Inspired by simple but super fun card games:
+//! - http://www.stfj.net/art/2011/Scoundrel.pdf
+//! - https://100r.co/site/donsol.html
 
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
 

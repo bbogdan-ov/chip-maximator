@@ -1,6 +1,6 @@
-mod scoundrel;
+mod scoloc;
 
-use scoundrel::*;
+use scoloc::*;
 
 use crate::{
 	app::AppContext,
