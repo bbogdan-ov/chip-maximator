@@ -3,10 +3,15 @@
 //!
 //! You can read the rules here: http://www.stfj.net/art/2011/Scoundrel.pdf
 
+use std::{collections::VecDeque, time::Duration};
+
+use quad_rand::ChooseRandom;
+
 use crate::{
 	app::AppContext,
 	math::{Color, Point, Rect, ToStrBytes},
 	painter::{CanvasId, Icon, IconKind, Sprite, Text},
+	util::{Easing, Timer, Tweenable},
 };
 
 use super::TitlesDisplay;
@@ -153,34 +158,104 @@ impl Card {
 /// Card sprite
 struct CardSprite {
 	inner: Sprite,
+	tween_x: Tweenable,
+	tween_y: Tweenable,
+	delay: Timer,
+	animate_appear: bool,
 }
 impl CardSprite {
 	fn new(ctx: &AppContext) -> Self {
 		Self {
 			inner: Sprite::from(&ctx.assets.card),
+			tween_x: Tweenable::default(),
+			tween_y: Tweenable::default(),
+			delay: Timer::default(),
+			animate_appear: true,
 		}
 	}
 
+	fn update(&mut self, ctx: &mut AppContext, idx: usize) -> bool {
+		const GAP: f32 = 10.0;
+
+		self.tween_x.update(&ctx.time);
+		self.tween_y.update(&ctx.time);
+
+		if self.animate_appear && self.delay.finished() {
+			self.delay
+				.start_duration(Duration::from_millis(500 + idx as u64 * 200));
+		}
+
+		self.delay.update(&ctx.time);
+
+		if self.animate_appear {
+			self.tween_x.value = -self.inner.size.x;
+			self.tween_y.value = -self.inner.size.y;
+
+			if self.delay.finished() {
+				// Stack cards in a 2x2 grid
+				let inner = &mut self.inner;
+				let x = 16.0 + (idx % 2) as f32 * (inner.size.x + GAP);
+				let y = 20.0 + if idx < 2 { 0.0 } else { inner.size.y + GAP };
+
+				let dur = Duration::from_millis(300);
+
+				self.tween_x.play(x, dur, Easing::InOutSine);
+				self.tween_y.play(y, dur, Easing::InOutSine);
+
+				self.animate_appear = false;
+			}
+		}
+
+		self.inner.pos.x = self.tween_x.value;
+		self.inner.pos.y = self.tween_y.value;
+
+		if self.tween_playing() {
+			return false;
+		}
+
+		if self.inner.is_hover(&mut ctx.input) {
+			// Animate floating
+			let t = ctx.time.elapsed as f32;
+			let sine_x = (t / 8.0).cos() * 2.0;
+			let sine_y = (t / 4.0).sin() * 2.0;
+
+			self.inner.pos.x += sine_x;
+			self.inner.pos.y += sine_y;
+
+			true
+		} else {
+			false
+		}
+	}
 	fn update_card(&mut self, card: &Card) {
 		self.inner.frame = card.sprite_frame();
+		self.animate_appear = true;
 	}
 
 	fn draw(&self, ctx: &mut AppContext, canvas: CanvasId) {
 		self.inner.draw(&mut ctx.painter, canvas);
 	}
+
+	fn tween_playing(&self) -> bool {
+		self.tween_x.playing()
+	}
 }
 
 /// Scoundrel card game
 pub struct Scoundrel {
-	deck: [Option<Card>; DECK_CARDS],
+	deck: Vec<Card>,
 	room: [Option<Card>; ROOM_CARDS],
+	/// Number of cards in the current room
 	room_cards: usize,
 
 	health: u8,
 	weapon: u8,
+	/// Whether the player ran from the previous room
+	prev_ran: bool,
 
 	hovered_card_idx: Option<usize>,
-	picked_sprite_idx: Option<usize>,
+	picked_card_idx: Option<usize>,
+	distorting: bool,
 
 	card_sprites: [CardSprite; ROOM_CARDS],
 	distort_canvas: CanvasId,
@@ -190,16 +265,21 @@ impl Scoundrel {
 		// Populate card sprites
 		let card_sprites = [(); ROOM_CARDS].map(|_| CardSprite::new(&ctx));
 
+		let mut deck: Vec<Card> = DEFAULT_DECK.into();
+		deck.shuffle();
+
 		let mut game = Self {
-			deck: DEFAULT_DECK.map(Some),
+			deck,
 			room: [None; ROOM_CARDS],
 			room_cards: 0,
 
 			health: MAX_HEALTH,
 			weapon: 0,
+			prev_ran: false,
 
 			hovered_card_idx: None,
-			picked_sprite_idx: None,
+			picked_card_idx: None,
+			distorting: false,
 
 			card_sprites,
 			distort_canvas: ctx.painter.context.new_canvas_no_clear(
@@ -208,28 +288,45 @@ impl Scoundrel {
 			),
 		};
 
-		game.set_room([
-			DEFAULT_DECK[0],
-			DEFAULT_DECK[20],
-			DEFAULT_DECK[43],
-			DEFAULT_DECK[31],
-		]);
-
+		game.next_room();
 		game
 	}
 
-	fn set_room(&mut self, cards: [Card; ROOM_CARDS]) {
-		for (i, card) in cards.iter().enumerate() {
-			self.card_sprites[i].update_card(card);
+	fn next_room(&mut self) {
+		// Take last 4 cards from the deck
+		let end = self.deck.len();
+		let start = end.saturating_sub(4);
+		let cards = self.deck.drain(start..end);
+
+		self.room_cards = 0;
+		self.prev_ran = false;
+
+		// Update card sprites and put taken cards into a new room
+		for (i, card) in cards.enumerate() {
+			self.card_sprites[i].update_card(&card);
+			self.room[i] = Some(card);
+			self.room_cards += 1;
+		}
+	}
+	fn run(&mut self) {
+		if self.prev_ran {
+			return;
 		}
 
-		self.room = cards.map(Some);
-		self.room_cards = ROOM_CARDS;
+		// Put remaining room cards into the bottom of the deck
+		for card in self.room.iter_mut() {
+			if let Some(card) = card.take() {
+				self.deck.insert(0, card);
+			}
+		}
+
+		self.next_room();
+		self.prev_ran = true;
 	}
 	fn pick_card(&mut self, idx: usize) {
-		let card = self.room[idx]
-			.as_ref()
-			.unwrap_or_else(|| panic!("no card at {idx}"));
+		let Some(card) = self.room[idx].take() else {
+			return;
+		};
 
 		let value = card.grade.value();
 
@@ -240,8 +337,10 @@ impl Scoundrel {
 			CardKind::Spade => self.damage(value),
 		}
 
-		self.room[idx] = None;
 		self.room_cards -= 1;
+
+		self.picked_card_idx = Some(idx);
+		self.distorting = true;
 	}
 
 	fn equip(&mut self, weapon: u8) {
@@ -255,9 +354,12 @@ impl Scoundrel {
 	}
 
 	pub fn update(&mut self, ctx: &mut AppContext) {
-		const GAP: f32 = 10.0;
-
 		self.hovered_card_idx = None;
+
+		// Check for an empty room inside update
+		if self.room_cards == 0 {
+			self.next_room();
+		}
 
 		for idx in 0..self.card_sprites.len() {
 			if self.room[idx].is_none() {
@@ -266,69 +368,29 @@ impl Scoundrel {
 
 			let sprite = &mut self.card_sprites[idx];
 
-			// Stack cards in a 2x2 grid
-			let inner = &mut sprite.inner;
-			inner.pos.set(16.0, 20.0);
-			inner.pos.x += (idx % 2) as f32 * (inner.size.x + GAP);
-			inner.pos.y += if idx < 2 { 0.0 } else { inner.size.y + GAP };
-
-			if inner.is_hover(&mut ctx.input) {
-				// Animate floating
-				let t = ctx.time.elapsed as f32;
-				let sine_x = (t / 8.0).cos() * 2.0;
-				let sine_y = (t / 4.0).sin() * 2.0;
-
-				sprite.inner.pos.x += sine_x;
-				sprite.inner.pos.y += sine_y;
-
+			let hovered = sprite.update(ctx, idx);
+			if hovered {
 				self.hovered_card_idx = Some(idx);
 
 				if ctx.input.left_just_pressed() {
 					self.pick_card(idx);
-					self.picked_sprite_idx = Some(idx);
 				}
 			}
 		}
 	}
 
 	pub fn offscreen_draw(&mut self, ctx: &mut AppContext) {
-		use quad_rand::rand;
-
-		const DS: f32 = TitlesDisplay::SIZE;
-		const STEP: f32 = 2.0;
-
-		if self.room_cards >= ROOM_CARDS {
+		if !self.distorting {
 			// Clear canvas with an image
 			Sprite::from(&ctx.assets.titles_bg).draw(&mut ctx.painter, self.distort_canvas);
 			return;
 		};
 
 		for _ in 0..4 {
-			let slices = quad_rand::gen_range(2, 8);
-
-			// Pick a random frame
-			let (frame_x, frame_y) = {
-				let idx = quad_rand::gen_range(0, slices * slices);
-				(idx % slices, idx / slices)
-			};
-
-			let offset_x = if rand() % 2 == 0 { STEP } else { -STEP };
-			let offset_y = if rand() % 2 == 0 { STEP } else { -STEP };
-
-			// Draw canvas on itself, crop an quarter and offset it by random about of pixels
-			Sprite::from(ctx.painter.canvas(self.distort_canvas))
-				.with_pos((
-					(DS / slices as f32) * frame_x as f32 + offset_x,
-					(DS / slices as f32) * frame_y as f32 + offset_y,
-				))
-				.with_frames_count((slices, slices))
-				.with_frame((frame_x, frame_y))
-				.with_scale(1.0 / slices as f32)
-				.draw(&mut ctx.painter, self.distort_canvas);
+			self.distort(ctx);
 		}
 
-		if let Some(idx) = self.picked_sprite_idx.take() {
-			// Draw only the currently hovering card sprite
+		if let Some(idx) = self.picked_card_idx.take() {
 			self.card_sprites[idx].draw(ctx, self.distort_canvas);
 		}
 	}
@@ -342,6 +404,35 @@ impl Scoundrel {
 		self.draw_description(ctx, canvas);
 
 		self.draw_buttons(ctx, canvas);
+	}
+
+	fn distort(&self, ctx: &mut AppContext) {
+		use quad_rand::rand;
+
+		const DS: f32 = TitlesDisplay::SIZE;
+		const STEP: f32 = 2.0;
+
+		let slices = quad_rand::gen_range(2, 8);
+
+		// Pick a random frame
+		let (frame_x, frame_y) = {
+			let idx = quad_rand::gen_range(0, slices * slices);
+			(idx % slices, idx / slices)
+		};
+
+		let offset_x = if rand() % 2 == 0 { STEP } else { -STEP };
+		let offset_y = if rand() % 2 == 0 { STEP } else { -STEP };
+
+		// Draw canvas on itself, crop an quarter and offset it by random about of pixels
+		Sprite::from(ctx.painter.canvas(self.distort_canvas))
+			.with_pos((
+				(DS / slices as f32) * frame_x as f32 + offset_x,
+				(DS / slices as f32) * frame_y as f32 + offset_y,
+			))
+			.with_frames_count((slices, slices))
+			.with_frame((frame_x, frame_y))
+			.with_scale(1.0 / slices as f32)
+			.draw(&mut ctx.painter, self.distort_canvas);
 	}
 
 	fn draw_stat(&self, ctx: &mut AppContext, canvas: CanvasId, y: f32, icon: IconKind, num: u8) {
@@ -359,11 +450,13 @@ impl Scoundrel {
 			.with_pos((X + 12.0, y))
 			.draw_chars(&mut ctx.painter, canvas, &num.to_str_bytes());
 	}
-	fn draw_buttons(&self, ctx: &mut AppContext, canvas: CanvasId) {
+	fn draw_buttons(&mut self, ctx: &mut AppContext, canvas: CanvasId) {
 		const DS: f32 = TitlesDisplay::SIZE;
 
 		const BTN_W: f32 = 16.0 * 3.0;
 		const BTN_H: f32 = 16.0;
+
+		const RUN_BTN: Rect = Rect::new_xywh(0.0, 0.0, 16.0 * 5.0, BTN_H);
 		const CLOSE_BTN: Rect = Rect::new_xywh(DS - BTN_W, 0.0, BTN_W, BTN_H);
 		const TUTORIAL_BTN: Rect = Rect::new_xywh(DS - BTN_W * 2.0, 0.0, BTN_W, BTN_H);
 
@@ -372,6 +465,18 @@ impl Scoundrel {
 		}
 		if TUTORIAL_BTN.is_hover(&mut ctx.input) && ctx.input.left_just_pressed() {
 			println!("tutor");
+		}
+
+		if !self.prev_ran {
+			if RUN_BTN.is_hover(&mut ctx.input) && ctx.input.left_just_pressed() {
+				self.run();
+			}
+
+			// Run button
+			Text::new(&ctx.assets.ibm_font)
+				.with_pos(RUN_BTN.pos)
+				.with_font_size(2.0)
+				.draw_chars(&mut ctx.painter, canvas, b"[run]");
 		}
 
 		// Close button
