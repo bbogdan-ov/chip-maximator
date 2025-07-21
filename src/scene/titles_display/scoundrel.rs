@@ -351,6 +351,7 @@ impl Scoundrel {
 
 	fn equip(&mut self, weapon: u8) {
 		self.weapon = weapon;
+		self.killed_cards.clear();
 	}
 	fn heal(&mut self, value: u8) {
 		if self.used_potion {
@@ -360,9 +361,29 @@ impl Scoundrel {
 		self.health = (self.health + value).min(MAX_HEALTH);
 	}
 	fn damage(&mut self, grade: CardGrade) {
+		let damage: u8;
 		let value = grade.value();
-		self.health = self.health.saturating_sub(value);
-		self.killed_cards.push(grade);
+
+		if let Some(monster) = self.killed_cards.last() {
+			if value < monster.value() {
+				// Take no damage
+				damage = 0;
+				self.killed_cards.push(grade);
+			} else {
+				// Break the weapon and take full damage from the monster
+				damage = value;
+				self.weapon = 0;
+				self.killed_cards.clear();
+			}
+		} else {
+			// No moster were killed with this weapon before, suppress the damage
+			damage = value.saturating_sub(self.weapon);
+			if damage < value {
+				self.killed_cards.push(grade);
+			}
+		}
+
+		self.health = self.health.saturating_sub(damage);
 	}
 
 	pub fn update(&mut self, ctx: &mut AppContext) {
