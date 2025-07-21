@@ -2,14 +2,28 @@ use std::time::Duration;
 
 use crate::{
 	app::AppContext,
-	math::{Color, Lerp, Point},
-	painter::{CanvasId, Sprite, Text},
+	math::{Color, Lerp, Point, Rect},
+	painter::{CanvasId, Painter, Sprite, Text},
 	scene::titles_display::TitlesDisplay,
 	util::{Anim, Easing, Timer, Tweenable},
 };
 
 use super::Screen;
 
+fn draw_icon_text(ctx: &mut AppContext, canvas: CanvasId, icon_rect: Rect, text: &[u8]) {
+	const SCALE: f32 = 1.3;
+
+	let width = text.len() as f32 * (8.0 * SCALE);
+	let offset = Point::new(icon_rect.size.x / 2.0 - width / 2.0, icon_rect.size.y + 4.0);
+
+	Text::new(&ctx.assets.ibm_font)
+		.with_pos(icon_rect.pos + offset)
+		.with_font_size(SCALE)
+		.with_bg(Color::new(0.0, 0.0, 1.0))
+		.draw_chars(&mut ctx.painter, canvas, text);
+}
+
+/// Clock
 struct Clock {
 	sprite: Sprite,
 	anim: Anim,
@@ -37,9 +51,37 @@ impl Clock {
 		}
 	}
 
-	fn draw(&mut self, ctx: &mut AppContext, canvas: CanvasId) {
+	fn update_physics(&mut self, ctx: &mut AppContext) {
 		const DS: f32 = TitlesDisplay::SIZE;
 
+		let spr = &mut self.sprite;
+
+		self.velocity.x *= 0.98;
+		self.velocity.y *= 0.98;
+
+		self.velocity.y += 1.0;
+
+		if spr.pos.x < 0.0 {
+			spr.pos.x = 0.0;
+			self.velocity.x *= -0.9;
+		} else if spr.pos.x + spr.size.x > DS {
+			spr.pos.x = DS - spr.size.x;
+			self.velocity.x *= -0.9;
+		}
+
+		if spr.pos.y < 0.0 {
+			spr.pos.y = 0.0;
+			self.velocity.y *= -0.9;
+		} else if spr.pos.y + spr.size.y > DS {
+			spr.pos.y = DS - spr.size.y;
+			self.velocity.y *= -0.9;
+		}
+
+		spr.pos.x += self.velocity.x;
+		spr.pos.y += self.velocity.y;
+	}
+
+	fn draw(&mut self, ctx: &mut AppContext, canvas: CanvasId) {
 		self.physics_timer.update(&ctx.time);
 		self.tween_progress.update(&ctx.time);
 
@@ -49,6 +91,8 @@ impl Clock {
 			self.velocity.y += quad_rand::gen_range(-10.0, -20.0);
 		}
 
+		let spr = &mut self.sprite;
+
 		if self.physics_timer.finished() {
 			self.anim.frame = 0;
 
@@ -57,7 +101,6 @@ impl Clock {
 				self.tween_progress
 					.play(1.0, Duration::from_millis(1000), Easing::Linear);
 			} else {
-				let spr = &mut self.sprite;
 				let p = *self.tween_progress;
 
 				spr.pos.x = spr.pos.x.lerp(Self::POS.x, p);
@@ -65,39 +108,15 @@ impl Clock {
 			}
 		} else {
 			self.anim.update(&ctx.time);
-
-			self.velocity.x *= 0.98;
-			self.velocity.y *= 0.98;
-
-			self.velocity.y += 1.0;
-
-			let spr = &mut self.sprite;
-
-			if spr.pos.x < 0.0 {
-				spr.pos.x = 0.0;
-				self.velocity.x *= -0.9;
-			} else if spr.pos.x + spr.size.x > DS {
-				spr.pos.x = DS - spr.size.x;
-				self.velocity.x *= -0.9;
-			}
-
-			if spr.pos.y < 0.0 {
-				spr.pos.y = 0.0;
-				self.velocity.y *= -0.9;
-			} else if spr.pos.y + spr.size.y > DS {
-				spr.pos.y = DS - spr.size.y;
-				self.velocity.y *= -0.9;
-			}
-
-			spr.pos.x += self.velocity.x;
-			spr.pos.y += self.velocity.y;
+			self.update_physics(ctx);
 		}
 
-		Text::new(&ctx.assets.ibm_font)
-			.with_pos(Self::POS + Point::new(0.0, self.sprite.size.y + 4.0))
-			.with_font_size(1.3)
-			.with_bg(Color::new(0.0, 0.0, 1.0))
-			.draw_chars(&mut ctx.painter, canvas, b"clock");
+		draw_icon_text(
+			ctx,
+			canvas,
+			Rect::new(Self::POS, self.sprite.size),
+			b"clock",
+		);
 
 		self.sprite.frame.x = self.anim.frame;
 		self.sprite.draw(&mut ctx.painter, canvas);
@@ -138,11 +157,7 @@ impl Titles {
 		sprite.pos.set(PADDING, DS - sprite.size.y - PADDING - 8.0);
 		sprite.draw(&mut ctx.painter, canvas);
 
-		Text::new(&ctx.assets.ibm_font)
-			.with_pos(sprite.pos + Point::new(-12.0, sprite.size.y + 4.0))
-			.with_font_size(1.3)
-			.with_bg(Color::new(0.0, 0.0, 1.0))
-			.draw_chars(&mut ctx.painter, canvas, b"scoloc");
+		draw_icon_text(ctx, canvas, sprite.rect(), b"scoloc");
 
 		if sprite.is_hover(&mut ctx.input) && ctx.input.left_just_pressed() {
 			*screen = Screen::Scoloc;
