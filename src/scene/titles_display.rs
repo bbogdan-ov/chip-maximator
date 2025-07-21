@@ -7,7 +7,7 @@ use titles::*;
 use crate::{
 	app::AppContext,
 	math::{Color, Point},
-	painter::{CanvasId, Sprite, Text, TextureOpts},
+	painter::{CanvasId, TextureOpts},
 };
 
 /// Screen
@@ -49,7 +49,7 @@ impl TitlesDisplay {
 
 			cur_screen: Screen::default(),
 			scoundrel: Scoundrel::new(ctx),
-			titles: Titles::new(),
+			titles: Titles::new(ctx),
 		}
 	}
 
@@ -68,7 +68,7 @@ impl TitlesDisplay {
 		ctx.input.set_cur_mouse_transform(Self::OFFSET, Self::SCALE);
 
 		match self.cur_screen {
-			Screen::Titles => self.titles.draw(ctx, self.canvas),
+			Screen::Titles => self.titles.draw(ctx, self.canvas, &mut self.cur_screen),
 			Screen::Scoloc => {
 				self.scoundrel.offscreen_draw(ctx);
 				self.scoundrel.draw(ctx, self.canvas, &mut self.cur_screen);
