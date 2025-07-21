@@ -339,7 +339,7 @@ impl Scoundrel {
 			CardKind::Spade => self.damage(value),
 		}
 
-		self.used_potion = matches!(card.kind, CardKind::Hearts);
+		self.used_potion = card.kind == CardKind::Hearts;
 		self.room_cards -= 1;
 		self.room[idx] = None;
 
