@@ -40,14 +40,20 @@ impl TitlesDisplay {
 	}
 
 	pub fn update(&mut self, ctx: &mut AppContext) {
+		ctx.input.set_cur_mouse_transform(Self::OFFSET, Self::SCALE);
 		self.scoundrel.update(ctx);
+		ctx.input.reset_cur_mouse_transform();
 	}
 
 	pub fn offscreen_draw(&mut self, ctx: &mut AppContext) {
+		ctx.input.set_cur_mouse_transform(Self::OFFSET, Self::SCALE);
+
+		self.scoundrel.offscreen_draw(ctx);
+
 		Sprite::from(&ctx.assets.titles_bg).draw(&mut ctx.painter, self.canvas);
 
-		ctx.input.set_cur_mouse_transform(Self::OFFSET, Self::SCALE);
 		self.scoundrel.draw(ctx, self.canvas);
+
 		ctx.input.reset_cur_mouse_transform();
 	}
 }
