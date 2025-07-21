@@ -252,6 +252,8 @@ pub struct Scoundrel {
 	weapon: u8,
 	/// Whether the player ran from the previous room
 	prev_ran: bool,
+	/// Whether the player used potion of the previous step
+	used_potion: bool,
 
 	hovered_card_idx: Option<usize>,
 	picked_card_idx: Option<usize>,
@@ -276,6 +278,7 @@ impl Scoundrel {
 			health: MAX_HEALTH,
 			weapon: 0,
 			prev_ran: false,
+			used_potion: false,
 
 			hovered_card_idx: None,
 			picked_card_idx: None,
@@ -324,12 +327,11 @@ impl Scoundrel {
 		self.prev_ran = true;
 	}
 	fn pick_card(&mut self, idx: usize) {
-		let Some(card) = self.room[idx].take() else {
+		let Some(card) = self.room[idx] else {
 			return;
 		};
 
 		let value = card.grade.value();
-
 		match card.kind {
 			CardKind::Diamonds => self.equip(value),
 			CardKind::Hearts => self.heal(value),
@@ -337,7 +339,9 @@ impl Scoundrel {
 			CardKind::Spade => self.damage(value),
 		}
 
+		self.used_potion = matches!(card.kind, CardKind::Hearts);
 		self.room_cards -= 1;
+		self.room[idx] = None;
 
 		self.picked_card_idx = Some(idx);
 		self.distorting = true;
@@ -347,6 +351,10 @@ impl Scoundrel {
 		self.weapon = weapon;
 	}
 	fn heal(&mut self, value: u8) {
+		if self.used_potion {
+			return;
+		}
+
 		self.health = (self.health + value).min(MAX_HEALTH);
 	}
 	fn damage(&mut self, value: u8) {
