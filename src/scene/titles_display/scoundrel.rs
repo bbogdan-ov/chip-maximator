@@ -3,7 +3,7 @@
 //!
 //! You can read the rules here: http://www.stfj.net/art/2011/Scoundrel.pdf
 
-use std::{collections::VecDeque, time::Duration};
+use std::time::Duration;
 
 use quad_rand::ChooseRandom;
 
