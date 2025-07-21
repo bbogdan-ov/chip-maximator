@@ -9,7 +9,7 @@ use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
 use crate::{
 	app::AppContext,
-	math::{Color, Point, Rect, ToStrBytes},
+	math::{Color, Lerp, Point, Rect, ToStrBytes},
 	painter::{CanvasId, Icon, IconKind, Sprite, Text},
 	util::{Easing, Timer, Tweenable},
 };
@@ -180,58 +180,62 @@ impl Card {
 /// Card sprite
 struct CardSprite {
 	inner: Sprite,
-	tween_x: Tweenable,
-	tween_y: Tweenable,
+	target_pos: Point,
+
 	delay: Timer,
+	tween_progress: Tweenable,
 	animate_appear: bool,
 }
 impl CardSprite {
-	fn new(ctx: &AppContext) -> Self {
+	fn new(ctx: &AppContext, idx: usize) -> Self {
+		const GAP: f32 = 10.0;
+
+		let s = Sprite::from(&ctx.assets.card);
+
+		// Stack cards in a 2x2 grid
+		let x = 16.0 + (idx % 2) as f32 * (s.size.x + GAP);
+		let y = 20.0 + if idx < 2 { 0.0 } else { s.size.y + GAP };
+
 		Self {
-			inner: Sprite::from(&ctx.assets.card),
-			tween_x: Tweenable::default(),
-			tween_y: Tweenable::default(),
+			inner: s,
+			target_pos: (x, y).into(),
+
 			delay: Timer::default(),
+			tween_progress: Tweenable::default(),
 			animate_appear: true,
 		}
 	}
 
 	fn update(&mut self, ctx: &mut AppContext, idx: usize) -> bool {
-		const GAP: f32 = 10.0;
-
-		self.tween_x.update(&ctx.time);
-		self.tween_y.update(&ctx.time);
+		self.tween_progress.update(&ctx.time);
 
 		if self.animate_appear && self.delay.finished() {
-			self.delay
-				.start_duration(Duration::from_millis(500 + idx as u64 * 200));
+			// Start delay before playing appear animation
+			let dur = Duration::from_millis(300 + idx as u64 * 140);
+			self.delay.start_duration(dur);
 		}
 
 		self.delay.update(&ctx.time);
 
 		if self.animate_appear {
-			self.tween_x.value = -self.inner.size.x;
-			self.tween_y.value = -self.inner.size.y;
+			self.tween_progress.value = 0.0;
 
 			if self.delay.finished() {
-				// Stack cards in a 2x2 grid
-				let inner = &mut self.inner;
-				let x = 16.0 + (idx % 2) as f32 * (inner.size.x + GAP);
-				let y = 20.0 + if idx < 2 { 0.0 } else { inner.size.y + GAP };
-
+				// Play apper animation when delay is finished
 				let dur = Duration::from_millis(300);
-
-				self.tween_x.play(x, dur, Easing::InOutSine);
-				self.tween_y.play(y, dur, Easing::InOutSine);
+				self.tween_progress.play(1.0, dur, Easing::InOutSine);
 
 				self.animate_appear = false;
 			}
 		}
 
-		self.inner.pos.x = self.tween_x.value;
-		self.inner.pos.y = self.tween_y.value;
+		let inner = &mut self.inner;
 
-		if self.tween_playing() {
+		// Lerp between two positions
+		let from = inner.size * -1.0;
+		inner.pos = from.lerp(self.target_pos, *self.tween_progress);
+
+		if self.tween_progress.playing() {
 			return false;
 		}
 
@@ -256,10 +260,6 @@ impl CardSprite {
 
 	fn draw(&self, ctx: &mut AppContext, canvas: CanvasId) {
 		self.inner.draw(&mut ctx.painter, canvas);
-	}
-
-	fn tween_playing(&self) -> bool {
-		self.tween_x.playing()
 	}
 }
 
@@ -292,7 +292,12 @@ pub struct Scoundrel {
 impl Scoundrel {
 	pub fn new(ctx: &mut AppContext) -> Self {
 		// Populate card sprites
-		let card_sprites = [(); ROOM_CARDS].map(|_| CardSprite::new(&ctx));
+		let mut i = 0;
+		let card_sprites = [(); ROOM_CARDS].map(|_| {
+			let sprite = CardSprite::new(&ctx, i);
+			i += 1;
+			sprite
+		});
 
 		let mut deck: Vec<Card> = DEFAULT_DECK.into();
 		let now = SystemTime::now()
