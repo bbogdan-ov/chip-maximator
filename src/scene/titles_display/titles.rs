@@ -97,9 +97,12 @@ impl Clock {
 			self.anim.frame = 0;
 
 			if !self.tween_progress.playing() {
-				self.tween_progress.value = 0.0;
-				self.tween_progress
-					.play(1.0, Duration::from_millis(1000), Easing::Linear);
+				self.tween_progress.play_from(
+					0.0,
+					1.0,
+					Duration::from_millis(1000),
+					Easing::Linear,
+				);
 			} else {
 				let p = *self.tween_progress;
 
