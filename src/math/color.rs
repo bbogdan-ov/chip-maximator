@@ -22,6 +22,12 @@ impl Color {
 			alpha: 1.0,
 		}
 	}
+	pub const fn hex(hex: u32) -> Self {
+		let red = ((hex & 0xFF0000) >> 16) as f32 / 255.0;
+		let green = ((hex & 0x00FF00) >> 8) as f32 / 255.0;
+		let blue = (hex & 0x0000FF) as f32 / 255.0;
+		Self::new(red, green, blue)
+	}
 	pub const fn gray(value: f32) -> Self {
 		Self::new(value, value, value)
 	}
