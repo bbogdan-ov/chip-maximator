@@ -521,15 +521,20 @@ impl Scoundrel {
 		let offset_y = if rand() % 2 == 0 { STEP } else { -STEP };
 
 		// Draw canvas on itself, crop an quarter and offset it by random about of pixels
-		Sprite::from(ctx.painter.canvas(self.distort_canvas))
+		let mut sprite = Sprite::from(ctx.painter.canvas(self.distort_canvas))
 			.with_pos((
 				(DS / slices as f32) * frame_x as f32 + offset_x,
 				(DS / slices as f32) * frame_y as f32 + offset_y,
 			))
 			.with_frames_count((slices, slices))
 			.with_frame((frame_x, frame_y))
-			.with_scale(1.0 / slices as f32)
-			.draw(&mut ctx.painter, self.distort_canvas);
+			.with_scale(1.0 / slices as f32);
+
+		if self.game_over() {
+			sprite.foreground = Color::new(1.0, 0.99, 0.99);
+		}
+
+		sprite.draw(&mut ctx.painter, self.distort_canvas);
 	}
 
 	fn draw_stat(&self, ctx: &mut AppContext, canvas: CanvasId, y: f32, icon: IconKind, num: u8) {
@@ -685,5 +690,8 @@ impl Scoundrel {
 
 	fn paused(&self) -> bool {
 		self.alert_kind.is_some() || self.rules_opened
+	}
+	fn game_over(&self) -> bool {
+		self.alert_kind.is_some_and(|k| k == AlertKind::GameOver)
 	}
 }
