@@ -3,9 +3,7 @@
 //!
 //! You can read the rules here: http://www.stfj.net/art/2011/Scoundrel.pdf
 
-use std::time::Duration;
-
-use quad_rand::ChooseRandom;
+use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
 use crate::{
 	app::AppContext,
@@ -279,7 +277,15 @@ impl Scoundrel {
 		let card_sprites = [(); ROOM_CARDS].map(|_| CardSprite::new(&ctx));
 
 		let mut deck: Vec<Card> = DEFAULT_DECK.into();
-		deck.shuffle();
+		let now = SystemTime::now()
+			.duration_since(UNIX_EPOCH)
+			.unwrap_or_default()
+			.as_millis() as usize;
+
+		for i in 1..deck.len() {
+			let j = (now + quad_rand::rand() as usize) % i;
+			deck.swap(i, j);
+		}
 
 		let mut game = Self {
 			deck,
