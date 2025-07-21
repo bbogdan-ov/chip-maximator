@@ -14,7 +14,7 @@ use crate::{
 	util::{Easing, Timer, Tweenable},
 };
 
-use super::TitlesDisplay;
+use super::{Screen, TitlesDisplay};
 
 const DECK_CARDS: usize = 52 - 8;
 const ROOM_CARDS: usize = 4;
@@ -487,7 +487,7 @@ impl Scoundrel {
 			self.card_sprites[idx].draw(ctx, self.distort_canvas);
 		}
 	}
-	pub fn draw(&mut self, ctx: &mut AppContext, canvas: CanvasId) {
+	pub fn draw(&mut self, ctx: &mut AppContext, canvas: CanvasId, screen: &mut Screen) {
 		Sprite::from(ctx.painter.canvas(self.distort_canvas)).draw(&mut ctx.painter, canvas);
 
 		self.draw_room(ctx, canvas);
@@ -500,7 +500,7 @@ impl Scoundrel {
 		self.draw_alert(ctx, canvas);
 		self.draw_rules(ctx, canvas);
 
-		self.draw_buttons(ctx, canvas);
+		self.draw_buttons(ctx, canvas, screen);
 	}
 
 	fn distort(&self, ctx: &mut AppContext) {
@@ -564,7 +564,7 @@ impl Scoundrel {
 			sprite.draw(&mut ctx.painter, canvas);
 		}
 	}
-	fn draw_buttons(&mut self, ctx: &mut AppContext, canvas: CanvasId) {
+	fn draw_buttons(&mut self, ctx: &mut AppContext, canvas: CanvasId, screen: &mut Screen) {
 		const DS: f32 = TitlesDisplay::SIZE;
 
 		const BTN_W: f32 = 16.0 * 3.0;
@@ -575,7 +575,11 @@ impl Scoundrel {
 		const TUTORIAL_BTN: Rect = Rect::new_xywh(DS - BTN_W * 2.0, 0.0, BTN_W, BTN_H);
 
 		if CLOSE_BTN.is_hover(&mut ctx.input) && ctx.input.left_just_pressed() {
-			self.rules_opened = false;
+			if self.rules_opened {
+				self.rules_opened = false;
+			} else {
+				*screen = Screen::default();
+			}
 		}
 		if TUTORIAL_BTN.is_hover(&mut ctx.input) && ctx.input.left_just_pressed() {
 			self.rules_opened ^= true;
