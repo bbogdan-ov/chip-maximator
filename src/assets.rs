@@ -161,6 +161,7 @@ assets! {
 		slot => "slot", 126, 119, 2, 1,
 		titles_bg => "titles-bg", 256, 256, 1, 1,
 		card => "card", 71, 96, 13, 4,
+		small_card => "small-card", 35, 51, 13, 1,
 
 		registers_display_uv => "registers-display-uv", 700, 700, 1, 1,
 		game_display_uv => "game-display-uv", 700, 700, 1, 1,

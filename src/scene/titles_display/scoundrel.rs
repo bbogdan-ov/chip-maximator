@@ -254,6 +254,7 @@ pub struct Scoundrel {
 	prev_ran: bool,
 	/// Whether the player used potion of the previous step
 	used_potion: bool,
+	killed_cards: Vec<CardGrade>,
 
 	hovered_card_idx: Option<usize>,
 	picked_card_idx: Option<usize>,
@@ -279,6 +280,7 @@ impl Scoundrel {
 			weapon: 0,
 			prev_ran: false,
 			used_potion: false,
+			killed_cards: Vec::with_capacity(14),
 
 			hovered_card_idx: None,
 			picked_card_idx: None,
@@ -335,8 +337,8 @@ impl Scoundrel {
 		match card.kind {
 			CardKind::Diamonds => self.equip(value),
 			CardKind::Hearts => self.heal(value),
-			CardKind::Club => self.damage(value),
-			CardKind::Spade => self.damage(value),
+			CardKind::Club => self.damage(card.grade),
+			CardKind::Spade => self.damage(card.grade),
 		}
 
 		self.used_potion = card.kind == CardKind::Hearts;
@@ -357,8 +359,10 @@ impl Scoundrel {
 
 		self.health = (self.health + value).min(MAX_HEALTH);
 	}
-	fn damage(&mut self, value: u8) {
+	fn damage(&mut self, grade: CardGrade) {
+		let value = grade.value();
 		self.health = self.health.saturating_sub(value);
+		self.killed_cards.push(grade);
 	}
 
 	pub fn update(&mut self, ctx: &mut AppContext) {
@@ -409,6 +413,7 @@ impl Scoundrel {
 
 		self.draw_stat(ctx, canvas, 26.0, IconKind::Heart, self.health);
 		self.draw_stat(ctx, canvas, 56.0, IconKind::Sword, self.weapon);
+		self.draw_killed_monsters(ctx, canvas);
 		self.draw_description(ctx, canvas);
 
 		self.draw_buttons(ctx, canvas);
@@ -457,6 +462,18 @@ impl Scoundrel {
 			.with_font_size(1.0)
 			.with_pos((X + 16.0, y))
 			.draw_chars(&mut ctx.painter, canvas, &num.to_str_bytes());
+	}
+	fn draw_killed_monsters(&self, ctx: &mut AppContext, canvas: CanvasId) {
+		const DS: f32 = TitlesDisplay::SIZE;
+		const X: f32 = DS - 70.0;
+		const Y: f32 = 94.0;
+
+		for (i, grade) in self.killed_cards.iter().enumerate() {
+			let frame = grade.value() as i32 - 2;
+			let mut sprite = Sprite::from(&ctx.assets.small_card).with_frame((frame, 0));
+			sprite.pos.set(X, Y + i as f32 * 10.0);
+			sprite.draw(&mut ctx.painter, canvas);
+		}
 	}
 	fn draw_buttons(&mut self, ctx: &mut AppContext, canvas: CanvasId) {
 		const DS: f32 = TitlesDisplay::SIZE;
