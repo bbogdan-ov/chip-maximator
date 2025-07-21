@@ -1,8 +1,6 @@
 use std::mem;
 
-use rodio::{
-	OutputStream, OutputStreamBuilder, Sink, Source, buffer::SamplesBuffer, source::TriangleWave,
-};
+use rodio::{OutputStream, OutputStreamBuilder, Sink, Source, buffer::SamplesBuffer};
 
 use crate::app::Time;
 

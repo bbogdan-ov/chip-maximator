@@ -3,7 +3,7 @@ use std::time::Duration;
 use crate::{
 	app::AppContext,
 	math::{Color, Lerp, Point, Rect},
-	painter::{CanvasId, Painter, Sprite, Text},
+	painter::{CanvasId, Sprite, Text},
 	scene::titles_display::TitlesDisplay,
 	util::{Anim, Easing, Timer, Tweenable},
 };
