@@ -407,8 +407,8 @@ impl Scoundrel {
 
 		self.draw_room(ctx, canvas);
 
-		self.draw_stat(ctx, canvas, 40.0, IconKind::Heart, self.health);
-		self.draw_stat(ctx, canvas, 64.0, IconKind::Sword, self.weapon);
+		self.draw_stat(ctx, canvas, 26.0, IconKind::Heart, self.health);
+		self.draw_stat(ctx, canvas, 56.0, IconKind::Sword, self.weapon);
 		self.draw_description(ctx, canvas);
 
 		self.draw_buttons(ctx, canvas);
@@ -445,17 +445,17 @@ impl Scoundrel {
 
 	fn draw_stat(&self, ctx: &mut AppContext, canvas: CanvasId, y: f32, icon: IconKind, num: u8) {
 		const DS: f32 = TitlesDisplay::SIZE;
-		const X: f32 = DS - 52.0;
+		const X: f32 = DS - 64.0;
 
 		Icon::new(&ctx.assets, icon)
-			.with_pos((X, y + 8.0))
+			.with_pos((X, y + 16.0))
 			.draw(ctx, canvas);
 
 		Text::new(&ctx.assets.serif_font)
 			.with_fg(Color::BLACK)
 			.with_bg(Color::TRANSPARENT)
-			.with_font_size(0.6)
-			.with_pos((X + 12.0, y))
+			.with_font_size(1.0)
+			.with_pos((X + 16.0, y))
 			.draw_chars(&mut ctx.painter, canvas, &num.to_str_bytes());
 	}
 	fn draw_buttons(&mut self, ctx: &mut AppContext, canvas: CanvasId) {
