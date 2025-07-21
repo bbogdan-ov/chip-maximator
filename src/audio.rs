@@ -1,5 +1,3 @@
-// TODO: may be there should be some sort of `AudioManager` and other audio controls traits...
-
 /// Default sound samplerate
 /// Every audio file should have this samplerate, otherwise it will sound wrong
 pub const SAMPLERATE: u32 = 24_000;
