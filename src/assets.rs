@@ -133,10 +133,10 @@ fn serif_font_lookup() -> FontLookup {
 	// /
 	lookup[47] = offset;
 
-	for byte in b" iljft-,.!?/".iter() {
+	for byte in b" Siljftrcgs-,.!?/".iter() {
 		widths[*byte as usize] = CharWidth::Half;
 	}
-	for byte in b"IJsrpeao0123456789".iter() {
+	for byte in b"IJEpeaou0123456789".iter() {
 		widths[*byte as usize] = CharWidth::ThreeQuarters;
 	}
 
