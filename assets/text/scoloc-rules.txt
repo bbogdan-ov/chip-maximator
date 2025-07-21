@@ -1,5 +1,8 @@
 SCOLOC card game
 
+Inspired by
+SCOUNDREL
+
 -- You
   You have 20 health
 points and it can not
