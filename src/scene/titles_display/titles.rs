@@ -35,7 +35,7 @@ struct Clock {
 impl Clock {
 	const POS: Point = {
 		const DS: f32 = TitlesDisplay::SIZE;
-		Point::new(78.0, DS - 78.0)
+		Point::new(84.0, DS - 78.0)
 	};
 
 	fn new(ctx: &mut AppContext) -> Self {
