@@ -263,8 +263,8 @@ impl CardSprite {
 	}
 }
 
-/// Scoundrel card game
-pub struct Scoundrel {
+/// Scoloc card game
+pub struct Scoloc {
 	deck: Vec<Card>,
 	room: [Option<Card>; ROOM_CARDS],
 	/// Number of cards in the current room
@@ -289,7 +289,7 @@ pub struct Scoundrel {
 	card_sprites: [CardSprite; ROOM_CARDS],
 	distort_canvas: CanvasId,
 }
-impl Scoundrel {
+impl Scoloc {
 	pub fn new(ctx: &mut AppContext) -> Self {
 		// Populate card sprites
 		let mut i = 0;

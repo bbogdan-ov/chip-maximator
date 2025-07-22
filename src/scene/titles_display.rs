@@ -23,7 +23,7 @@ pub struct TitlesDisplay {
 	pub canvas: CanvasId,
 
 	cur_screen: Screen,
-	scoundrel: Scoundrel,
+	scoloc: Scoloc,
 	titles: Titles,
 }
 impl TitlesDisplay {
@@ -48,7 +48,7 @@ impl TitlesDisplay {
 			),
 
 			cur_screen: Screen::default(),
-			scoundrel: Scoundrel::new(ctx),
+			scoloc: Scoloc::new(ctx),
 			titles: Titles::new(ctx),
 		}
 	}
@@ -58,7 +58,7 @@ impl TitlesDisplay {
 
 		match self.cur_screen {
 			Screen::Titles => (),
-			Screen::Scoloc => self.scoundrel.update(ctx),
+			Screen::Scoloc => self.scoloc.update(ctx),
 		}
 
 		ctx.input.reset_cur_mouse_transform();
@@ -70,8 +70,8 @@ impl TitlesDisplay {
 		match self.cur_screen {
 			Screen::Titles => self.titles.draw(ctx, self.canvas, &mut self.cur_screen),
 			Screen::Scoloc => {
-				self.scoundrel.offscreen_draw(ctx);
-				self.scoundrel.draw(ctx, self.canvas, &mut self.cur_screen);
+				self.scoloc.offscreen_draw(ctx);
+				self.scoloc.draw(ctx, self.canvas, &mut self.cur_screen);
 			}
 		}
 
