@@ -18,11 +18,26 @@ pub(super) enum Screen {
 	Scoloc,
 }
 
+/// Titles context
+pub(super) struct TitlesContext {
+	prev_screen: Option<Screen>,
+	cur_screen: Screen,
+}
+impl TitlesContext {
+	pub fn goto_screen(&mut self, screen: Screen) {
+		self.prev_screen = Some(self.cur_screen);
+		self.cur_screen = screen;
+	}
+}
+
 /// Back board titles display
 pub struct TitlesDisplay {
-	pub canvas: CanvasId,
+	context: TitlesContext,
 
-	cur_screen: Screen,
+	pub canvas: CanvasId,
+	/// Last drawn frame of the previous screen
+	prev_screen_canvas: CanvasId,
+
 	scoloc: Scoloc,
 	titles: Titles,
 }
@@ -36,18 +51,22 @@ impl TitlesDisplay {
 	const SCALE: f32 = 0.77;
 
 	pub fn new(ctx: &mut AppContext) -> Self {
-		Self {
-			canvas: ctx.painter.context.new_canvas(
-				(Self::SIZE, Self::SIZE),
-				Color::BLACK,
-				TextureOpts {
-					alpha: false,
-					min_nearest: false,
-					mag_nearest: false,
-				},
-			),
+		let size = Point::new(Self::SIZE, Self::SIZE);
+		let opts = TextureOpts {
+			alpha: false,
+			min_nearest: false,
+			mag_nearest: false,
+		};
 
-			cur_screen: Screen::default(),
+		Self {
+			context: TitlesContext {
+				prev_screen: None,
+				cur_screen: Screen::default(),
+			},
+
+			canvas: ctx.painter.context.new_canvas(size, Color::BLACK, opts),
+			prev_screen_canvas: ctx.painter.context.new_canvas_no_clear(size, opts),
+
 			scoloc: Scoloc::new(ctx),
 			titles: Titles::new(ctx),
 		}
@@ -56,7 +75,7 @@ impl TitlesDisplay {
 	pub fn update(&mut self, ctx: &mut AppContext) {
 		ctx.input.set_cur_mouse_transform(Self::OFFSET, Self::SCALE);
 
-		match self.cur_screen {
+		match self.context.cur_screen {
 			Screen::Titles => (),
 			Screen::Scoloc => self.scoloc.update(ctx),
 		}
@@ -67,11 +86,11 @@ impl TitlesDisplay {
 	pub fn offscreen_draw(&mut self, ctx: &mut AppContext) {
 		ctx.input.set_cur_mouse_transform(Self::OFFSET, Self::SCALE);
 
-		match self.cur_screen {
-			Screen::Titles => self.titles.draw(ctx, self.canvas, &mut self.cur_screen),
+		match self.context.cur_screen {
+			Screen::Titles => self.titles.draw(ctx, self.canvas, &mut self.context),
 			Screen::Scoloc => {
 				self.scoloc.offscreen_draw(ctx);
-				self.scoloc.draw(ctx, self.canvas, &mut self.cur_screen);
+				self.scoloc.draw(ctx, self.canvas, &mut self.context);
 			}
 		}
 

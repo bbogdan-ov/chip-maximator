@@ -14,7 +14,7 @@ use crate::{
 	util::{Easing, Timer, Tweenable},
 };
 
-use super::{Screen, TitlesDisplay};
+use super::{Screen, TitlesContext, TitlesDisplay};
 
 const DECK_CARDS: usize = 52 - 8;
 const ROOM_CARDS: usize = 4;
@@ -497,7 +497,7 @@ impl Scoloc {
 			self.card_sprites[idx].draw(ctx, self.distort_canvas);
 		}
 	}
-	pub fn draw(&mut self, ctx: &mut AppContext, canvas: CanvasId, screen: &mut Screen) {
+	pub fn draw(&mut self, ctx: &mut AppContext, canvas: CanvasId, titles_ctx: &mut TitlesContext) {
 		Sprite::from(ctx.painter.canvas(self.distort_canvas)).draw(&mut ctx.painter, canvas);
 
 		self.draw_room(ctx, canvas);
@@ -510,7 +510,7 @@ impl Scoloc {
 		self.draw_alert(ctx, canvas);
 		self.draw_rules(ctx, canvas);
 
-		self.draw_buttons(ctx, canvas, screen);
+		self.draw_buttons(ctx, canvas, titles_ctx);
 	}
 
 	fn distort(&self, ctx: &mut AppContext) {
@@ -574,7 +574,12 @@ impl Scoloc {
 			sprite.draw(&mut ctx.painter, canvas);
 		}
 	}
-	fn draw_buttons(&mut self, ctx: &mut AppContext, canvas: CanvasId, screen: &mut Screen) {
+	fn draw_buttons(
+		&mut self,
+		ctx: &mut AppContext,
+		canvas: CanvasId,
+		titles_ctx: &mut TitlesContext,
+	) {
 		const DS: f32 = TitlesDisplay::SIZE;
 
 		const BTN_W: f32 = 16.0 * 3.0;
@@ -588,7 +593,7 @@ impl Scoloc {
 			if self.rules_opened {
 				self.rules_opened = false;
 			} else {
-				*screen = Screen::default();
+				titles_ctx.goto_screen(Screen::default());
 				self.reset(ctx);
 			}
 		}

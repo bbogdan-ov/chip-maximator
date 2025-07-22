@@ -8,7 +8,7 @@ use crate::{
 	util::{Anim, Easing, Timer, Tweenable},
 };
 
-use super::Screen;
+use super::{Screen, TitlesContext};
 
 fn draw_icon_text(ctx: &mut AppContext, canvas: CanvasId, icon_rect: Rect, text: &[u8]) {
 	const SCALE: f32 = 1.3;
@@ -137,7 +137,7 @@ impl Titles {
 		}
 	}
 
-	pub fn draw(&mut self, ctx: &mut AppContext, canvas: CanvasId, screen: &mut Screen) {
+	pub fn draw(&mut self, ctx: &mut AppContext, canvas: CanvasId, titles_ctx: &mut TitlesContext) {
 		// Draw background image
 		Sprite::from(&ctx.assets.titles_bg).draw(&mut ctx.painter, canvas);
 
@@ -148,11 +148,16 @@ impl Titles {
 			.with_bg(Color::TRANSPARENT)
 			.draw_chars(&mut ctx.painter, canvas, b"Thank you");
 
-		self.draw_scoloc_icon(ctx, canvas, screen);
+		self.draw_scoloc_icon(ctx, canvas, titles_ctx);
 
 		self.clock.draw(ctx, canvas);
 	}
-	fn draw_scoloc_icon(&self, ctx: &mut AppContext, canvas: CanvasId, screen: &mut Screen) {
+	fn draw_scoloc_icon(
+		&self,
+		ctx: &mut AppContext,
+		canvas: CanvasId,
+		titles_ctx: &mut TitlesContext,
+	) {
 		const DS: f32 = TitlesDisplay::SIZE;
 		const PADDING: f32 = 20.0;
 
@@ -163,7 +168,7 @@ impl Titles {
 		draw_icon_text(ctx, canvas, sprite.rect(), b"scoloc");
 
 		if sprite.is_hover(&mut ctx.input) && ctx.input.left_just_pressed() {
-			*screen = Screen::Scoloc;
+			titles_ctx.goto_screen(Screen::Scoloc);
 		}
 	}
 }
