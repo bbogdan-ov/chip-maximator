@@ -540,7 +540,7 @@ impl Scoundrel {
 			.with_frame((frame_x, frame_y))
 			.with_scale(1.0 / slices as f32);
 
-		if self.game_over() {
+		if self.is_game_over() {
 			sprite.foreground = Color::new(1.0, 0.99, 0.99);
 		}
 
@@ -706,7 +706,7 @@ impl Scoundrel {
 	fn paused(&self) -> bool {
 		self.alert_kind.is_some() || self.rules_opened
 	}
-	fn game_over(&self) -> bool {
+	fn is_game_over(&self) -> bool {
 		self.alert_kind.is_some_and(|k| k == AlertKind::GameOver)
 	}
 }
