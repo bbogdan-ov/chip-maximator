@@ -1,4 +1,4 @@
-use std::{cell::RefCell, rc::Rc, time::Duration};
+use std::{cell::RefCell, f32::consts::PI, rc::Rc, time::Duration};
 
 use crate::{app::Time, math::Lerp};
 
@@ -14,6 +14,7 @@ pub enum Easing {
 	OutBack,
 	OutCubic,
 	InOutSine,
+	InSine,
 }
 impl Easing {
 	// These magic easing functions were taken from `easings.net`
@@ -28,7 +29,10 @@ impl Easing {
 		1.0 - (1.0 - x).powi(3)
 	}
 	fn in_out_sine(x: f32) -> f32 {
-		-((std::f32::consts::PI * x).cos() - 1.0) / 2.0
+		-((PI * x).cos() - 1.0) / 2.0
+	}
+	fn in_sine(x: f32) -> f32 {
+		1.0 - ((x * PI) / 2.0).cos()
 	}
 
 	/// Calculate the result of the easing function
@@ -39,6 +43,7 @@ impl Easing {
 			Self::OutBack => Self::out_back(time),
 			Self::OutCubic => Self::out_cubic(time),
 			Self::InOutSine => Self::in_out_sine(time),
+			Self::InSine => Self::in_sine(time),
 		}
 	}
 }
