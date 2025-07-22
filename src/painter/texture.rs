@@ -5,7 +5,7 @@ use miniquad::raw_gl::*;
 pub struct Texture(pub GLuint);
 
 /// Texture options
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Copy)]
 pub struct TextureOpts {
 	pub alpha: bool,
 	pub min_nearest: bool,
