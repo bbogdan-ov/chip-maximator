@@ -73,6 +73,7 @@ impl Tweenable {
 	}
 
 	pub fn play_from(&mut self, start: f32, end: f32, duration: Duration, easing: Easing) {
+		self.value = start;
 		self.start = start;
 		self.end = end;
 		self.easing = easing;
