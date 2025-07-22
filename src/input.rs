@@ -35,6 +35,7 @@ pub struct Input {
 	pub consumed_by: InputConsume,
 	/// Cursor icon to apply at the frame end
 	pub cursor_icon: CursorIcon,
+	prev_cursor_icon: CursorIcon,
 }
 impl Default for Input {
 	fn default() -> Self {
@@ -56,13 +57,17 @@ impl Default for Input {
 
 			consumed_by: InputConsume::default(),
 			cursor_icon: CursorIcon::Default,
+			prev_cursor_icon: CursorIcon::Default,
 		}
 	}
 }
 impl Input {
 	pub fn update_after(&mut self) {
 		// Update cursor icon
-		window::set_mouse_cursor(self.cursor_icon);
+		if self.prev_cursor_icon != self.cursor_icon {
+			window::set_mouse_cursor(self.cursor_icon);
+			self.prev_cursor_icon = self.cursor_icon;
+		}
 		self.cursor_icon = CursorIcon::Default;
 
 		self.mouse_movement = self.mouse_pos - self.mouse_last_pos;
