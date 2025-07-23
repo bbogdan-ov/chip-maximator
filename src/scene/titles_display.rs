@@ -1,13 +1,16 @@
 mod scoloc;
 mod titles;
 
+use std::time::Duration;
+
 use scoloc::*;
 use titles::*;
 
 use crate::{
 	app::AppContext,
-	math::{Color, Point},
-	painter::{CanvasId, TextureOpts},
+	math::Point,
+	painter::{CanvasId, Sprite, TextureOpts},
+	util::{Easing, Tweenable},
 };
 
 /// Screen
@@ -20,12 +23,12 @@ pub(super) enum Screen {
 
 /// Titles context
 pub(super) struct TitlesContext {
-	prev_screen: Option<Screen>,
+	screen_switched: bool,
 	cur_screen: Screen,
 }
 impl TitlesContext {
 	pub fn goto_screen(&mut self, screen: Screen) {
-		self.prev_screen = Some(self.cur_screen);
+		self.screen_switched = true;
 		self.cur_screen = screen;
 	}
 }
@@ -34,9 +37,10 @@ impl TitlesContext {
 pub struct TitlesDisplay {
 	context: TitlesContext,
 
-	pub canvas: CanvasId,
-	/// Last drawn frame of the previous screen
-	prev_screen_canvas: CanvasId,
+	/// The first canvas is the current one and the second
+	/// one retains last frame of the previous screen
+	canvases: [CanvasId; 2],
+	transition_tween: Tweenable,
 
 	scoloc: Scoloc,
 	titles: Titles,
@@ -60,12 +64,15 @@ impl TitlesDisplay {
 
 		Self {
 			context: TitlesContext {
-				prev_screen: None,
+				screen_switched: false,
 				cur_screen: Screen::default(),
 			},
 
-			canvas: ctx.painter.context.new_canvas(size, Color::BLACK, opts),
-			prev_screen_canvas: ctx.painter.context.new_canvas_no_clear(size, opts),
+			canvases: [
+				ctx.painter.context.new_canvas_no_clear(size, opts),
+				ctx.painter.context.new_canvas_no_clear(size, opts),
+			],
+			transition_tween: Tweenable::new(1.0),
 
 			scoloc: Scoloc::new(ctx),
 			titles: Titles::new(ctx),
@@ -73,11 +80,22 @@ impl TitlesDisplay {
 	}
 
 	pub fn update(&mut self, ctx: &mut AppContext) {
+		self.transition_tween.update(&ctx.time);
+
 		ctx.input.set_cur_mouse_transform(Self::OFFSET, Self::SCALE);
 
 		match self.context.cur_screen {
 			Screen::Titles => (),
 			Screen::Scoloc => self.scoloc.update(ctx),
+		}
+
+		if self.context.screen_switched {
+			self.canvases.swap(0, 1);
+			self.context.screen_switched = false;
+
+			let dur = Duration::from_millis(500);
+			self.transition_tween
+				.play_from(0.0, 1.0, dur, Easing::InSine);
 		}
 
 		ctx.input.reset_cur_mouse_transform();
@@ -86,14 +104,27 @@ impl TitlesDisplay {
 	pub fn offscreen_draw(&mut self, ctx: &mut AppContext) {
 		ctx.input.set_cur_mouse_transform(Self::OFFSET, Self::SCALE);
 
-		match self.context.cur_screen {
-			Screen::Titles => self.titles.draw(ctx, self.canvas, &mut self.context),
-			Screen::Scoloc => {
-				self.scoloc.offscreen_draw(ctx);
-				self.scoloc.draw(ctx, self.canvas, &mut self.context);
-			}
-		}
+		self.draw_screen(ctx, self.canvases[0], self.context.cur_screen);
+
+		// Draw animated previous screen
+		let p = self.transition_tween.value;
+		Sprite::from(ctx.painter.canvas(self.canvases[1]))
+			.with_pos((0.0, Self::SIZE * p))
+			.draw(&mut ctx.painter, self.canvases[0]);
 
 		ctx.input.reset_cur_mouse_transform();
+	}
+	fn draw_screen(&mut self, ctx: &mut AppContext, canvas: CanvasId, screen: Screen) {
+		match screen {
+			Screen::Titles => self.titles.draw(ctx, canvas, &mut self.context),
+			Screen::Scoloc => {
+				self.scoloc.offscreen_draw(ctx);
+				self.scoloc.draw(ctx, canvas, &mut self.context);
+			}
+		}
+	}
+
+	pub fn cur_canvas(&self) -> CanvasId {
+		self.canvases[0]
 	}
 }

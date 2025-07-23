@@ -576,7 +576,8 @@ impl BackBoard {
 
 		// Draw titles display
 		let titles_uv = &ctx.assets.titles_display_uv;
-		Sprite::from(ctx.painter.canvas(self.titles_display.canvas))
+		let titles_cvs = self.titles_display.cur_canvas();
+		Sprite::from(ctx.painter.canvas(titles_cvs))
 			.with_uv(titles_uv.id)
 			.with_frames_count(titles_uv.frames)
 			.with_frame((frame, 0))
