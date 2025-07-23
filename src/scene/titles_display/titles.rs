@@ -51,7 +51,7 @@ impl Clock {
 		}
 	}
 
-	fn update_physics(&mut self, ctx: &mut AppContext) {
+	fn update_physics(&mut self) {
 		const DS: f32 = TitlesDisplay::SIZE;
 
 		let spr = &mut self.sprite;
@@ -111,7 +111,7 @@ impl Clock {
 			}
 		} else {
 			self.anim.update(&ctx.time);
-			self.update_physics(ctx);
+			self.update_physics();
 		}
 
 		draw_icon_text(
