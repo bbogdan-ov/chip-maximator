@@ -163,6 +163,7 @@ assets! {
 		card => "card", 71, 96, 13, 4,
 		small_card => "small-card", 35, 51, 13, 1,
 		clock => "clock", 50, 50, 8, 1,
+		movie => "movie", 154, 128, 7, 1,
 
 		registers_display_uv => "registers-display-uv", 700, 700, 1, 1,
 		game_display_uv => "game-display-uv", 700, 700, 1, 1,

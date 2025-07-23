@@ -5,6 +5,7 @@ mod instuction_leds;
 mod key;
 mod keyboard;
 mod links;
+mod movie_display;
 mod registers_display;
 mod reset_button;
 mod state_leds;
@@ -20,6 +21,7 @@ use instuction_leds::InstuctionLeds;
 use keyboard::Keyboard;
 use links::Links;
 use miniquad::{KeyCode, window};
+use movie_display::MovieDisplay;
 use registers_display::RegistersDisplay;
 use reset_button::ResetButton;
 use state_leds::StateLeds;
@@ -520,6 +522,7 @@ impl FrontBoard {
 struct BackBoard {
 	links: Links,
 	titles_display: TitlesDisplay,
+	movie_display: MovieDisplay,
 
 	anim: Anim,
 
@@ -537,6 +540,7 @@ impl BackBoard {
 		Self {
 			links: Links,
 			titles_display: TitlesDisplay::new(ctx),
+			movie_display: MovieDisplay::new(ctx),
 
 			anim,
 
@@ -573,6 +577,7 @@ impl BackBoard {
 	fn draw_displays(&mut self, ctx: &mut AppContext, canvas: CanvasId, frame: i32) {
 		// Draw displays textures
 		self.titles_display.offscreen_draw(ctx);
+		self.movie_display.offscreen_draw(ctx);
 
 		// Draw titles display
 		let titles_uv = &ctx.assets.titles_display_uv;
@@ -580,6 +585,14 @@ impl BackBoard {
 		Sprite::from(ctx.painter.canvas(titles_cvs))
 			.with_uv(titles_uv.id)
 			.with_frames_count(titles_uv.frames)
+			.with_frame((frame, 0))
+			.draw(&mut ctx.painter, canvas);
+
+		// Draw movie display
+		let movie_uv = &ctx.assets.movie_display_uv;
+		Sprite::from(ctx.painter.canvas(self.movie_display.canvas))
+			.with_uv(movie_uv.id)
+			.with_frames_count(movie_uv.frames)
 			.with_frame((frame, 0))
 			.draw(&mut ctx.painter, canvas);
 	}
