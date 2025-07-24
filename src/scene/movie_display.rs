@@ -1,7 +1,7 @@
 use crate::{
 	app::AppContext,
 	math::{Color, Point},
-	painter::{CanvasId, Sprite, Text, TextureOpts},
+	painter::{CanvasId, Sprite, TextureOpts},
 	util::Anim,
 };
 
