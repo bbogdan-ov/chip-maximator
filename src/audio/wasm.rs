@@ -34,7 +34,7 @@ impl Sound {
 /// Audio manager
 pub struct Audio;
 impl Audio {
-	pub fn new() -> Self {
+	pub fn new(_muted: bool) -> Self {
 		Self
 	}
 	pub fn new_sound<S>(&mut self, _source: S) -> Sound {
