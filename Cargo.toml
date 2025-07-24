@@ -10,9 +10,13 @@ authors = ["bogdanov <bbogdan_ov@mail.ru>"]
 
 [dependencies]
 bitflags = "2.9.1"
-lz4_flex = "0.11.5"
 miniquad = { git = "https://github.com/not-fl3/miniquad" }
 quad-rand = "0.2.3"
+
+[dependencies.lz4_flex]
+version = "0.11.5"
+default-features = false
+features = ["std", "frame", "checked-decode"]
 
 # TODO: Leave only the `playback` feature, because we don't need audio decoding
 #       at runtime. Currently, if i'm trying to remove the `vorbis` feature, Rust
