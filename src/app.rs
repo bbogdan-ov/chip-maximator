@@ -1,11 +1,10 @@
-use std::{io::Read, time::Duration};
+use std::time::Duration;
 
 use miniquad::{EventHandler, KeyCode, KeyMods, MouseButton, window};
 
 use crate::{
 	assets::Assets,
 	audio::Audio,
-	emu::Emu,
 	input::Input,
 	math::{Color, Point},
 	native::NativeInstant,
@@ -114,6 +113,9 @@ impl App {
 		#[allow(clippy::unused_io_amount)]
 		#[cfg(not(target_arch = "wasm32"))]
 		{
+			use crate::emu::Emu;
+			use std::io::Read;
+
 			let arg = std::env::args().nth(1).unwrap();
 			let mut file = std::fs::File::open(arg).unwrap();
 			let mut buf = [0_u8; Emu::PROGRAM_SIZE];

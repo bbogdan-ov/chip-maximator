@@ -1,6 +1,7 @@
 #[cfg(target_arch = "wasm32")]
 mod wasm;
 
+#[cfg(not(target_arch = "wasm32"))]
 use std::process::Command;
 
 #[cfg(not(target_arch = "wasm32"))]

@@ -58,12 +58,12 @@ enum Action {
 	Reset,
 }
 
-fn new_buzz_sound(ctx: &mut AppContext) -> Sound {
+fn new_buzz_sound(_ctx: &mut AppContext) -> Sound {
 	#[cfg(not(target_arch = "wasm32"))]
 	{
 		use rodio::source::Source;
 
-		ctx.audio.new_sound(
+		_ctx.audio.new_sound(
 			rodio::source::TriangleWave::new(200.0)
 				.high_pass(500)
 				.amplify(0.2),
