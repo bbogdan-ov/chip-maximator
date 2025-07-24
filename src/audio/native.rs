@@ -4,6 +4,9 @@ use rodio::{OutputStream, OutputStreamBuilder, Sink, Source, buffer::SamplesBuff
 
 use crate::app::Time;
 
+/// Default sound samplerate
+/// Every audio file should have this samplerate, otherwise it will sound wrong
+pub const SAMPLERATE: u32 = 24_000;
 const SINKS_COUNT: usize = 16;
 
 /// This structure fixes Rust's lack of custom alignment in `include_bytes!()`
