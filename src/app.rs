@@ -109,11 +109,7 @@ impl App {
 		}
 
 		#[cfg(target_arch = "wasm32")]
-		{
-			state.emu.load(include_bytes!(
-				"../roms/games/Space Invaders [David Winter].ch8"
-			));
-		}
+		state.emu.load(include_bytes!("../roms/space-invaders.ch8"));
 
 		#[allow(clippy::unused_io_amount)]
 		#[cfg(not(target_arch = "wasm32"))]
