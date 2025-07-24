@@ -57,11 +57,12 @@ fn decode_textures() {
 		let mut buf = vec![0_u8; info.output_buffer_size()];
 		info.next_frame(&mut buf).unwrap();
 
-		// Store pixel data into a file
+		// Compress and store pixel data into a file
+		let compressed = lz4_flex::compress(&buf);
 		let filename = entry.file_name();
 		let filename = format!("{}.bytes", filename.to_string_lossy());
 		let path = out_dir.clone().join(filename);
-		fs::write(path, &buf).unwrap();
+		fs::write(path, &compressed).unwrap();
 	}
 }
 
