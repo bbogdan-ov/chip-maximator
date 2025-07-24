@@ -13,6 +13,19 @@ pub struct AssetTexture {
 	pub frames: Point<i32>,
 }
 
+macro_rules! include_texture {
+	($painter:expr, $path:expr, $width:expr, $height:expr, $opts:expr) => {{
+		const SIZE: usize = $width as usize * $height as usize * 4;
+
+		let bytes = include_bytes!($path);
+
+		let decoded = lz4_flex::decompress(bytes, SIZE).expect("unable to decode texture data");
+		$painter
+			.context
+			.new_texture($width as i32, $height as i32, Some(&decoded), $opts)
+	}};
+}
+
 macro_rules! assets {
 	(
 		textures {
@@ -36,18 +49,20 @@ macro_rules! assets {
 				Self {
 					// Load textures
 					$($tex_name: {
-						let bytes = include_bytes!(concat!(
-							env!("OUT_DIR"),
-							"/textures/",
-							$tex_file_name,
-							".png.bytes"
-						));
-						let texture = painter.context.new_texture(
+						let texture = include_texture!(
+							painter,
+							concat!(
+								env!("OUT_DIR"),
+								"/textures/",
+								$tex_file_name,
+								".png.bytes"
+							),
 							$twidth as i32 * $frames_x as i32,
 							$theight as i32 * $frames_y as i32,
-							Some(bytes),
-							Default::default(),
+							Default::default()
 						);
+
+						println!("texture \"{}\" decompressed", stringify!($tex_name));
 
 						AssetTexture {
 							id: texture,
@@ -58,22 +73,24 @@ macro_rules! assets {
 
 					// Load fonts
 					$($font_name: {
-						let bytes = include_bytes!(concat!(
-							env!("OUT_DIR"),
-							"/textures/",
-							$font_file_name,
-							".png.bytes"
-						));
-						let texture = painter.context.new_texture(
+						let texture = include_texture!(
+							painter,
+							concat!(
+								env!("OUT_DIR"),
+								"/textures/",
+								$font_file_name,
+								".png.bytes"
+							),
 							$fwidth as i32 * $count as i32,
 							$fheight as i32,
-							Some(bytes),
 							TextureOpts {
 								alpha: true,
 								min_nearest: !$smooth,
 								mag_nearest: !$smooth,
 							}
 						);
+
+						println!("font \"{}\" decompressed", stringify!($font_name));
 
 						Font {
 							texture,
