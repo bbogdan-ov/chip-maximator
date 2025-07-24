@@ -37,3 +37,8 @@ git = "https://github.com/RustAudio/rodio"
 rev = "d2313b0bfee41fdf5ad6da5c1bd1a5a18ea71e75"
 default-features = false
 features = ["vorbis"]
+
+[build-dependencies.lz4_flex]
+version = "0.11.5"
+default-features = false
+features = ["std", "frame", "checked-decode"]
