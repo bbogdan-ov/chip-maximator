@@ -6,7 +6,6 @@ fn main() {
 	println!("cargo::rerun-if-changed=assets/textures");
 	println!("cargo::rerun-if-changed=assets/sounds");
 
-	// TODO: compress the raw pixel and audio data using lz4
 	decode_textures();
 	decode_sounds();
 }
