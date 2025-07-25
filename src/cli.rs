@@ -7,9 +7,9 @@ fn print_help() {
 	println!("    {bin} [options...] [rom]", bin = env!("CARGO_BIN_NAME"));
 	println!();
 	println!("OPTIONS:");
-	println!("    --muted    - Mute audio");
-	println!("    --hello    - Say \"hello\" to CHIP MAXIMATOR");
-	println!("    -h, --help - Print this message");
+	println!("    --muted      Mute audio");
+	println!("    --hello      Say \"hello\" to CHIP MAXIMATOR");
+	println!("    -h, --help   Print this message");
 }
 
 /// Command line interface
