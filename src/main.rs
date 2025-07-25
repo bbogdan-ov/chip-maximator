@@ -34,7 +34,8 @@ fn main() {
 		..Default::default()
 	};
 
-	let cli = Cli::new();
+	let mut cli = Cli::default();
+	cli.parse();
 
 	miniquad::start(conf, move || Box::new(App::new(cli)));
 }
