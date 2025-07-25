@@ -134,7 +134,7 @@ impl App {
 		state.emu.load(DEFAULT_ROM);
 
 		#[cfg(not(target_arch = "wasm32"))]
-		match cli.rom_path.and_then(|p| read_rom(p)) {
+		match cli.rom_path.and_then(read_rom) {
 			Some(bytes) => state.emu.load(&bytes),
 			None => state.emu.load(DEFAULT_ROM),
 		}

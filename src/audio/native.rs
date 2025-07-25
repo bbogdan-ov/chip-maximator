@@ -90,6 +90,7 @@ impl Sound {
 }
 
 /// Audio manager
+#[allow(clippy::large_enum_variant)]
 pub enum Audio {
 	Normal {
 		stream: OutputStream,

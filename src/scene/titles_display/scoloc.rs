@@ -294,7 +294,7 @@ impl Scoloc {
 		// Populate card sprites
 		let mut i = 0;
 		let card_sprites = [(); ROOM_CARDS].map(|_| {
-			let sprite = CardSprite::new(&ctx, i);
+			let sprite = CardSprite::new(ctx, i);
 			i += 1;
 			sprite
 		});
