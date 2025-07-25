@@ -98,19 +98,9 @@ pub struct App {
 }
 impl App {
 	pub fn new(cli: Cli) -> Self {
-		// TODO: put code in order
-
 		let mut painter = Painter::new().unwrap_or_else(|e| {
 			panic!("failed to initialize painter: {e}");
 		});
-
-		let audio = Audio::new(cli.muted);
-
-		let canvas = painter.context.new_canvas(
-			(CANVAS_WIDTH, CANVAS_HEIGHT),
-			Color::BLACK,
-			Default::default(),
-		);
 
 		let mut context = AppContext {
 			assets: Assets::new(&mut painter),
@@ -121,15 +111,15 @@ impl App {
 			icons_anim: Anim::new(8, 0..4).with_looped().with_playing(),
 
 			painter,
-			audio,
+			audio: Audio::new(cli.muted),
 		};
 
 		let mut state = State::new();
-
 		if cfg!(debug_assertions) {
 			state.board.power = true;
 		}
 
+		// Load ROM
 		#[cfg(target_arch = "wasm32")]
 		state.emu.load(DEFAULT_ROM);
 
@@ -138,6 +128,12 @@ impl App {
 			Some(bytes) => state.emu.load(&bytes),
 			None => state.emu.load(DEFAULT_ROM),
 		}
+
+		let canvas = context.painter.context.new_canvas(
+			(CANVAS_WIDTH, CANVAS_HEIGHT),
+			Color::BLACK,
+			Default::default(),
+		);
 
 		Self {
 			scene: Scene::new(&mut context, &state),
