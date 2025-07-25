@@ -1,4 +1,4 @@
-use std::time::Duration;
+use std::{path::Path, time::Duration};
 
 use miniquad::{EventHandler, KeyCode, KeyMods, MouseButton, window};
 
@@ -6,6 +6,7 @@ use crate::{
 	assets::Assets,
 	audio::Audio,
 	cli::Cli,
+	emu::Emu,
 	input::Input,
 	math::{Color, Point},
 	native::NativeInstant,
@@ -18,6 +19,8 @@ use crate::{
 
 pub const CANVAS_WIDTH: f32 = 700.0;
 pub const CANVAS_HEIGHT: f32 = 700.0;
+
+const DEFAULT_ROM: &[u8] = include_bytes!("../roms/outlaw.ch8");
 
 /// Time
 pub struct Time {
@@ -62,6 +65,26 @@ pub struct AppContext {
 	pub icons_anim: Anim,
 }
 
+#[allow(clippy::unused_io_amount)]
+#[cfg(not(target_arch = "wasm32"))]
+fn read_rom(path: impl AsRef<Path>) -> Option<[u8; Emu::PROGRAM_SIZE]> {
+	// TODO: notify users about ROM reading errors
+
+	use crate::emu::Emu;
+	use std::io::Read;
+
+	let Ok(mut file) = std::fs::File::open(path) else {
+		return None;
+	};
+
+	let mut buf = [0_u8; Emu::PROGRAM_SIZE];
+	if file.read(&mut buf).is_ok() {
+		Some(buf)
+	} else {
+		None
+	}
+}
+
 /// App
 pub struct App {
 	pub scene: Scene,
@@ -81,8 +104,7 @@ impl App {
 			panic!("failed to initialize painter: {e}");
 		});
 
-		// TODO: allow to mute audio by passing cli args
-		let audio = Audio::new(cfg!(debug_assertions));
+		let audio = Audio::new(cli.muted);
 
 		let canvas = painter.context.new_canvas(
 			(CANVAS_WIDTH, CANVAS_HEIGHT),
@@ -109,19 +131,12 @@ impl App {
 		}
 
 		#[cfg(target_arch = "wasm32")]
-		state.emu.load(include_bytes!("../roms/space-invaders.ch8"));
+		state.emu.load(DEFAULT_ROM);
 
-		#[allow(clippy::unused_io_amount)]
 		#[cfg(not(target_arch = "wasm32"))]
-		{
-			use crate::emu::Emu;
-			use std::io::Read;
-
-			let arg = std::env::args().nth(1).unwrap();
-			let mut file = std::fs::File::open(arg).unwrap();
-			let mut buf = [0_u8; Emu::PROGRAM_SIZE];
-			file.read(&mut buf).unwrap();
-			state.emu.load(&buf);
+		match cli.rom_path.and_then(|p| read_rom(p)) {
+			Some(bytes) => state.emu.load(&bytes),
+			None => state.emu.load(DEFAULT_ROM),
 		}
 
 		Self {
