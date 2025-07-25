@@ -694,7 +694,7 @@ impl Scoloc {
 		let serif = &ctx.assets.serif_font;
 
 		let scroll_h = RULES_LINES as f32 * (serif.size.y * FONT_SIZE);
-		let scrollf = (ctx.input.mouse_pos().y / DS).clamp(0.0, 1.0);
+		let scrollf = (ctx.input.mouse_pos.y / DS).clamp(0.0, 1.0);
 		let scroll = ((scroll_h - DS + PADDING).max(0.0) * scrollf).floor();
 
 		Sprite::new(ctx.painter.white_texture, (DS, DS))

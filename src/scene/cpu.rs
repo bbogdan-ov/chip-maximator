@@ -26,7 +26,7 @@ impl Cpu {
 	}
 	fn update_shaking(&self, ctx: &mut AppContext, state: &mut State) {
 		let rect = self.sprite.rect().extend(64.0);
-		let hovered = !ctx.input.is_consumed() && rect.contains(&ctx.input.mouse_pos());
+		let hovered = !ctx.input.is_consumed() && rect.contains(&ctx.input.mouse_pos);
 		if !hovered {
 			return;
 		}

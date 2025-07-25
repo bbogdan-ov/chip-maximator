@@ -200,7 +200,9 @@ impl EventHandler for App {
 	fn mouse_motion_event(&mut self, mut x: f32, mut y: f32) {
 		x = (x - self.canvas_offset.x) / self.canvas_scale;
 		y = (y - self.canvas_offset.y) / self.canvas_scale;
-		self.context.input.set_mouse_pos(x, y);
+
+		self.context.input.real_mouse_pos.set(x, y);
+		self.context.input.mouse_pos.set(x, y);
 	}
 	fn mouse_button_down_event(&mut self, button: MouseButton, _x: f32, _y: f32) {
 		self.context.input.mouse_button = button;

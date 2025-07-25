@@ -92,7 +92,7 @@ impl Valve {
 
 			let angle = state.valve.angle.borrow().value;
 
-			self.start_mouse_dir = ctx.input.mouse_pos() - self.sprite.rect().center();
+			self.start_mouse_dir = ctx.input.mouse_pos - self.sprite.rect().center();
 			self.start_angle = angle;
 		} else if ctx.input.mouse_just_released {
 			// Release valve
@@ -101,7 +101,7 @@ impl Valve {
 
 		// Rotate valve
 		if state.valve.is_rotating {
-			self.rotate_to(state, ctx.input.mouse_pos());
+			self.rotate_to(state, ctx.input.mouse_pos);
 		}
 
 		// TODO: move input consuming to a more obvious place...
