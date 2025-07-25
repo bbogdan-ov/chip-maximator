@@ -1,6 +1,7 @@
 mod app;
 mod assets;
 mod audio;
+mod cli;
 mod emu;
 mod games;
 mod input;
@@ -13,6 +14,7 @@ mod tooltip;
 mod util;
 
 use app::App;
+use cli::Cli;
 use miniquad::conf;
 
 fn main() {
@@ -32,5 +34,7 @@ fn main() {
 		..Default::default()
 	};
 
-	miniquad::start(conf, move || Box::new(App::new()));
+	let cli = Cli::new();
+
+	miniquad::start(conf, move || Box::new(App::new(cli)));
 }

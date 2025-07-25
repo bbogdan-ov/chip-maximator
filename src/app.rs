@@ -5,6 +5,7 @@ use miniquad::{EventHandler, KeyCode, KeyMods, MouseButton, window};
 use crate::{
 	assets::Assets,
 	audio::Audio,
+	cli::Cli,
 	input::Input,
 	math::{Color, Point},
 	native::NativeInstant,
@@ -73,7 +74,7 @@ pub struct App {
 	pub canvas_scale: f32,
 }
 impl App {
-	pub fn new() -> Self {
+	pub fn new(cli: Cli) -> Self {
 		// TODO: put code in order
 
 		let mut painter = Painter::new().unwrap_or_else(|e| {
