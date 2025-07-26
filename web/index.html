@@ -2,26 +2,30 @@
 <html lang="en">
 <head>
 	<meta charset="utf-8">
-	<title>CHIP MAXIMATOR by bogdanov</title>
+	<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+
 	<style>
-		html,
-		body,
-		canvas {
+		html, body, canvas {
 			margin: 0px;
 			padding: 0px;
 			width: 100%;
 			height: 100%;
 			overflow: hidden;
-			position: absolute;
 			background: black;
-			z-index: 0;
+		}
+		canvas {
+			width: 100%;
+			height: 100%;
+			position: absolute;
 		}
 	</style>
+
+	<title>CHIP MAXIMATOR by bogdanov</title>
 </head>
 <body>
-	<canvas id="glcanvas" tabindex='1'></canvas>
+	<canvas id="glcanvas"></canvas>
 
 	<script src="gl.js"></script>
-	<script>load("chip-maximator.wasm");</script>
+	<script src="main.js"></script>
 </body>
 </html>

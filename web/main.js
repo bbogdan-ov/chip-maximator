@@ -1,0 +1,1 @@
+load("chip-maximator.wasm");
