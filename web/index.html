@@ -5,18 +5,51 @@
 	<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
 
 	<style>
+		* {
+			user-select: none;
+			position: relative;
+			box-sizing: border-box;
+		}
 		html, body, canvas {
-			margin: 0px;
-			padding: 0px;
 			width: 100%;
 			height: 100%;
+			margin: 0px;
+			padding: 0px;
+
 			overflow: hidden;
+
 			background: black;
+			color: white;
+			font-size: 16px;
+			font-family: monospace;
 		}
 		canvas {
 			width: 100%;
 			height: 100%;
 			position: absolute;
+		}
+
+		.loading-popup {
+			padding: 20px;
+			width: max-content;
+			max-width: 100vw;
+
+			display: flex;
+			flex-direction: column;
+			gap: 10px;
+			position: fixed;
+			text-align: center;
+			top: 50%;
+			left: 50%;
+			translate: -50% -50%;
+
+			background: black;
+			border: 2px solid white;
+			transition: 1s;
+		}
+		.loading-popup.hidden {
+			opacity: 0;
+			pointer-events: none;
 		}
 	</style>
 
@@ -24,6 +57,13 @@
 </head>
 <body>
 	<canvas id="glcanvas"></canvas>
+
+	<div class="loading-popup">
+		<span>please wait...</span>
+		<span id="progress-line">------------------------------</span>
+		<span id="progress-bytes">0M / 0M</span>
+		<span>and there is no sounds in the web version<br>because i couldn't make it work</span>
+	</div>
 
 	<script src="gl.js"></script>
 	<script src="main.js"></script>
