@@ -34,6 +34,14 @@ unsafe fn set_texture_data(width: i32, height: i32, alpha: bool, data: Option<&[
 	unsafe {
 		let format = if alpha { GL_RGBA } else { GL_RGB };
 
+		let data: *const GLvoid = match data {
+			Some(data) => data.as_ptr() as _,
+			// FIXME: (wasm) Firefox arguing about textures with `null` data
+			//        "WebGL warning: drawElementsInstanced: Tex image TEXTURE_2D level 0 is
+			//        incurring lazy initialization."
+			None => std::ptr::null(),
+		};
+
 		glTexImage2D(
 			GL_TEXTURE_2D,
 			0,
@@ -43,7 +51,7 @@ unsafe fn set_texture_data(width: i32, height: i32, alpha: bool, data: Option<&[
 			0,
 			format,
 			GL_UNSIGNED_BYTE,
-			data.map(|d| d.as_ptr() as _).unwrap_or(std::ptr::null()),
+			data,
 		);
 	}
 }
