@@ -2,6 +2,7 @@ use std::time::Duration;
 
 unsafe extern "C" {
 	pub fn performance_now() -> i32;
+	pub fn date_now() -> i32;
 	pub fn window_open(url: *const i8, len: usize);
 }
 

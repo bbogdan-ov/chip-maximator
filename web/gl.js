@@ -630,6 +630,9 @@ var importObject = {
         performance_now: function() {
             return performance.now();
         },
+        date_now: function() {
+            return Date.now();
+        },
         window_open: function(url, len) {
             url = UTF8ToString(url, len);
             console.log("Open url", url);

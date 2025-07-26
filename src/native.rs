@@ -50,3 +50,22 @@ pub fn open_url(url: &str) -> Result<(), &'static str> {
 	// Any other unsupported target will return an error message
 	Err("Your OS is't supported!!")
 }
+
+pub fn now_millis() -> i32 {
+	#[cfg(not(target_arch = "wasm32"))]
+	{
+		use std::time::{SystemTime, UNIX_EPOCH};
+
+		let now = SystemTime::now()
+			.duration_since(UNIX_EPOCH)
+			.unwrap_or_default()
+			.as_millis();
+
+		(now % std::i32::MAX as u128) as i32
+	}
+
+	#[cfg(target_arch = "wasm32")]
+	unsafe {
+		wasm::date_now()
+	}
+}

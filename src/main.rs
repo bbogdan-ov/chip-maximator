@@ -37,6 +37,9 @@ fn main() {
 	let mut cli = Cli::default();
 	cli.parse();
 
+	// Set random seed
+	quad_rand::srand(native::now_millis() as u64);
+
 	miniquad::start(conf, move || {
 		// Register custom panic hook here, because miniquad registers it in the `start`
 		// function so we need to override it. Also miniquad's panic message says

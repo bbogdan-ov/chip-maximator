@@ -5,7 +5,9 @@
 //! - http://www.stfj.net/art/2011/Scoundrel.pdf
 //! - https://100r.co/site/donsol.html
 
-use std::time::{Duration, SystemTime, UNIX_EPOCH};
+use std::time::Duration;
+
+use quad_rand::ChooseRandom;
 
 use crate::{
 	app::AppContext,
@@ -300,15 +302,7 @@ impl Scoloc {
 		});
 
 		let mut deck: Vec<Card> = DEFAULT_DECK.into();
-		let now = SystemTime::now()
-			.duration_since(UNIX_EPOCH)
-			.unwrap_or_default()
-			.as_millis() as usize;
-
-		for i in 1..deck.len() {
-			let j = (now + quad_rand::rand() as usize) % i;
-			deck.swap(i, j);
-		}
+		deck.shuffle();
 
 		let mut game = Self {
 			deck,
