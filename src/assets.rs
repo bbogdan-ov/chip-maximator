@@ -198,7 +198,7 @@ assets! {
 		serif_font => "serif-font", 26, 40, 72, true, {serif_font_lookup()},
 	}
 	sounds {
-		// FIXME: key press/release sounds are kinda bad
+		// TODO: key press/release sounds are kinda bad
 		key_press_1_sound => "key-press-1",
 		key_release_1_sound => "key-release-1",
 		key_press_2_sound => "key-press-2",
