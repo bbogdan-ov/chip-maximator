@@ -289,10 +289,15 @@ pub struct Scoloc {
 	alert_kind: Option<AlertKind>,
 
 	card_sprites: [CardSprite; ROOM_CARDS],
+	/// The last texture of the distort canvas
+	/// TODO: should be just a texture to which we will copy `distort_canvas` texture data
+	distort_canvas_last: CanvasId,
 	distort_canvas: CanvasId,
 }
 impl Scoloc {
 	pub fn new(ctx: &mut AppContext) -> Self {
+		const SIZE: Point = Point::new(TitlesDisplay::SIZE, TitlesDisplay::SIZE);
+
 		// Populate card sprites
 		let mut i = 0;
 		let card_sprites = [(); ROOM_CARDS].map(|_| {
@@ -304,6 +309,7 @@ impl Scoloc {
 		let mut deck: Vec<Card> = DEFAULT_DECK.into();
 		deck.shuffle();
 
+		let pctx = &mut ctx.painter.context;
 		let mut game = Self {
 			deck,
 			room: [None; ROOM_CARDS],
@@ -324,10 +330,8 @@ impl Scoloc {
 			alert_kind: None,
 
 			card_sprites,
-			distort_canvas: ctx.painter.context.new_canvas_no_clear(
-				(TitlesDisplay::SIZE, TitlesDisplay::SIZE),
-				Default::default(),
-			),
+			distort_canvas_last: pctx.new_canvas_no_clear(SIZE, Default::default()),
+			distort_canvas: pctx.new_canvas_no_clear(SIZE, Default::default()),
 		};
 
 		game.next_room();
@@ -490,6 +494,10 @@ impl Scoloc {
 		if let Some(idx) = self.picked_card_idx.take() {
 			self.card_sprites[idx].draw(ctx, self.distort_canvas);
 		}
+
+		// Save current `distort_canvas` texture
+		Sprite::from(ctx.painter.canvas(self.distort_canvas))
+			.draw(&mut ctx.painter, self.distort_canvas_last);
 	}
 	pub fn draw(&mut self, ctx: &mut AppContext, canvas: CanvasId, titles_ctx: &mut TitlesContext) {
 		Sprite::from(ctx.painter.canvas(self.distort_canvas)).draw(&mut ctx.painter, canvas);
@@ -524,8 +532,9 @@ impl Scoloc {
 		let offset_x = if rand() % 2 == 0 { STEP } else { -STEP };
 		let offset_y = if rand() % 2 == 0 { STEP } else { -STEP };
 
-		// Draw canvas on itself, crop an quarter and offset it by random about of pixels
-		let mut sprite = Sprite::from(ctx.painter.canvas(self.distort_canvas))
+		// Draw last canvas texture, crop an quarter and offset it by random about of pixels
+		let cvs = ctx.painter.canvas(self.distort_canvas_last);
+		let mut sprite = Sprite::from(cvs)
 			.with_pos((
 				(DS / slices as f32) * frame_x as f32 + offset_x,
 				(DS / slices as f32) * frame_y as f32 + offset_y,
