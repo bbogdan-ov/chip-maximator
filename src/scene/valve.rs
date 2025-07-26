@@ -104,7 +104,6 @@ impl Valve {
 			self.rotate_to(state, ctx.input.mouse_pos);
 		}
 
-		// TODO: move input consuming to a more obvious place...
 		ctx.input
 			.consume(InputConsume::VALVE, state.valve.is_rotating);
 	}
