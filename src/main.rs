@@ -37,5 +37,46 @@ fn main() {
 	let mut cli = Cli::default();
 	cli.parse();
 
-	miniquad::start(conf, move || Box::new(App::new(cli)));
+	miniquad::start(conf, move || {
+		// Register custom panic hook here, because miniquad registers it in the `start`
+		// function so we need to override it. Also miniquad's panic message says
+		// fucking nothing about the error itself
+		set_hook();
+		Box::new(App::new(cli))
+	});
+}
+
+fn set_hook() {
+	#[cfg(target_arch = "wasm32")]
+	unsafe {
+		use miniquad::native::wasm::console_log;
+		use std::ffi::CString;
+
+		std::panic::set_hook(Box::new(|info| {
+			if let Some(loc) = info.location() {
+				let loc_str = CString::new(format!(
+					"in file {:?} at {}:{}",
+					loc.file(),
+					loc.line(),
+					loc.column()
+				))
+				.unwrap();
+
+				console_log(loc_str.as_ptr());
+			} else {
+				console_log(c"NO LOCATION".as_ptr());
+			}
+
+			let payload: CString;
+			if let Some(s) = info.payload().downcast_ref::<&str>() {
+				payload = CString::new(*s).unwrap();
+			} else if let Some(s) = info.payload().downcast_ref::<String>() {
+				payload = CString::new(s.clone()).unwrap();
+			} else {
+				payload = CString::new("NO PAYLOAD").unwrap();
+			}
+
+			console_log(payload.as_ptr());
+		}));
+	}
 }
