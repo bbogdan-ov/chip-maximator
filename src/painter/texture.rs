@@ -79,9 +79,6 @@ impl super::PainterContext {
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, min_filter as i32);
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, mag_filter as i32);
 
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER as i32);
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER as i32);
-
 			set_texture_data(width, height, opts.alpha, data);
 
 			glBindTexture(GL_TEXTURE_2D, 0);
