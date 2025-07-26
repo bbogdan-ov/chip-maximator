@@ -265,8 +265,8 @@ impl CardSprite {
 	}
 }
 
-/// Scoloc card game
-pub struct Scoloc {
+/// Scoloc game state
+struct GameState {
 	deck: Vec<Card>,
 	room: [Option<Card>; ROOM_CARDS],
 	/// Number of cards in the current room
@@ -280,13 +280,40 @@ pub struct Scoloc {
 	used_potion: bool,
 	killed_cards: Vec<CardGrade>,
 
+	distorting: bool,
+	alert_kind: Option<AlertKind>,
+}
+impl Default for GameState {
+	fn default() -> Self {
+		let mut deck: Vec<Card> = DEFAULT_DECK.into();
+		deck.shuffle();
+
+		Self {
+			deck,
+			room: [None; ROOM_CARDS],
+			room_cards: 0,
+
+			health: MAX_HEALTH,
+			weapon: 0,
+			prev_ran: false,
+			used_potion: false,
+			killed_cards: Vec::with_capacity(14),
+
+			distorting: false,
+			alert_kind: None,
+		}
+	}
+}
+
+/// Scoloc card game
+pub struct Scoloc {
+	state: GameState,
+
 	hovered_card_idx: Option<usize>,
 	picked_card_idx: Option<usize>,
-	distorting: bool,
 
 	rules_opened: bool,
 	alert_tween_y: Tweenable,
-	alert_kind: Option<AlertKind>,
 
 	card_sprites: [CardSprite; ROOM_CARDS],
 	/// The last texture of the distort canvas
@@ -306,28 +333,15 @@ impl Scoloc {
 			sprite
 		});
 
-		let mut deck: Vec<Card> = DEFAULT_DECK.into();
-		deck.shuffle();
-
 		let pctx = &mut ctx.painter.context;
 		let mut game = Self {
-			deck,
-			room: [None; ROOM_CARDS],
-			room_cards: 0,
-
-			health: MAX_HEALTH,
-			weapon: 0,
-			prev_ran: false,
-			used_potion: false,
-			killed_cards: Vec::with_capacity(14),
+			state: GameState::default(),
 
 			hovered_card_idx: None,
 			picked_card_idx: None,
-			distorting: false,
 
 			rules_opened: false,
 			alert_tween_y: Tweenable::new(-TitlesDisplay::SIZE),
-			alert_kind: None,
 
 			card_sprites,
 			distort_canvas_last: pctx.new_canvas_no_clear(SIZE, Default::default()),
@@ -339,43 +353,43 @@ impl Scoloc {
 	}
 
 	fn next_room(&mut self) {
-		if self.deck.is_empty() {
+		if self.state.deck.is_empty() {
 			self.set_alert(AlertKind::Win);
 			return;
 		}
 
 		// Take last 4 cards from the deck
-		let end = self.deck.len();
+		let end = self.state.deck.len();
 		let start = end.saturating_sub(4);
-		let cards = self.deck.drain(start..end);
+		let cards = self.state.deck.drain(start..end);
 
-		self.room_cards = 0;
-		self.prev_ran = false;
+		self.state.room_cards = 0;
+		self.state.prev_ran = false;
 
 		// Update card sprites and put taken cards into a new room
 		for (i, card) in cards.enumerate() {
 			self.card_sprites[i].update_card(&card);
-			self.room[i] = Some(card);
-			self.room_cards += 1;
+			self.state.room[i] = Some(card);
+			self.state.room_cards += 1;
 		}
 	}
 	fn run(&mut self) {
-		if self.prev_ran {
+		if self.state.prev_ran {
 			return;
 		}
 
 		// Put remaining room cards into the bottom of the deck
-		for card in self.room.iter_mut() {
+		for card in self.state.room.iter_mut() {
 			if let Some(card) = card.take() {
-				self.deck.insert(0, card);
+				self.state.deck.insert(0, card);
 			}
 		}
 
 		self.next_room();
-		self.prev_ran = true;
+		self.state.prev_ran = true;
 	}
 	fn pick_card(&mut self, idx: usize) {
-		let Some(card) = self.room[idx] else {
+		let Some(card) = self.state.room[idx] else {
 			return;
 		};
 
@@ -387,50 +401,50 @@ impl Scoloc {
 			CardKind::Spade => self.damage(card.grade),
 		}
 
-		self.used_potion = card.kind == CardKind::Hearts;
-		self.room_cards -= 1;
-		self.room[idx] = None;
+		self.state.used_potion = card.kind == CardKind::Hearts;
+		self.state.room_cards -= 1;
+		self.state.room[idx] = None;
 
 		self.picked_card_idx = Some(idx);
-		self.distorting = true;
+		self.state.distorting = true;
 	}
 
 	fn equip(&mut self, weapon: u8) {
-		self.weapon = weapon;
-		self.killed_cards.clear();
+		self.state.weapon = weapon;
+		self.state.killed_cards.clear();
 	}
 	fn heal(&mut self, value: u8) {
-		if self.used_potion {
+		if self.state.used_potion {
 			return;
 		}
 
-		self.health = (self.health + value).min(MAX_HEALTH);
+		self.state.health = (self.state.health + value).min(MAX_HEALTH);
 	}
 	fn damage(&mut self, grade: CardGrade) {
 		let damage: u8;
 		let value = grade.value();
 
-		if let Some(monster) = self.killed_cards.last() {
+		if let Some(monster) = self.state.killed_cards.last() {
 			if value < monster.value() {
 				// Take no damage
 				damage = 0;
-				self.killed_cards.push(grade);
+				self.state.killed_cards.push(grade);
 			} else {
 				// Break the weapon and take full damage from the monster
 				damage = value;
-				self.weapon = 0;
-				self.killed_cards.clear();
+				self.state.weapon = 0;
+				self.state.killed_cards.clear();
 			}
 		} else {
 			// No moster were killed with this weapon before, suppress the damage
-			damage = value.saturating_sub(self.weapon);
+			damage = value.saturating_sub(self.state.weapon);
 			if damage < value {
-				self.killed_cards.push(grade);
+				self.state.killed_cards.push(grade);
 			}
 		}
 
-		self.health = self.health.saturating_sub(damage);
-		if self.health == 0 {
+		self.state.health = self.state.health.saturating_sub(damage);
+		if self.state.health == 0 {
 			self.set_alert(AlertKind::GameOver);
 		}
 	}
@@ -440,7 +454,7 @@ impl Scoloc {
 		self.alert_tween_y
 			.play(0.0, Duration::from_millis(1000), Easing::Linear);
 
-		self.alert_kind = Some(kind);
+		self.state.alert_kind = Some(kind);
 	}
 
 	pub fn update(&mut self, ctx: &mut AppContext) {
@@ -453,12 +467,12 @@ impl Scoloc {
 		}
 
 		// Check for an empty room inside update
-		if self.room_cards == 0 {
+		if self.state.room_cards == 0 {
 			self.next_room();
 		}
 
 		for idx in 0..self.card_sprites.len() {
-			if self.room[idx].is_none() {
+			if self.state.room[idx].is_none() {
 				continue;
 			}
 
@@ -474,16 +488,16 @@ impl Scoloc {
 			}
 		}
 	}
-	fn reset(&mut self, ctx: &mut AppContext) {
-		// FIXME: not the most elegant way to reset the state...
-		//        it will cause a new vector allocations
-		*self = Self::new(ctx);
+	fn reset(&mut self) {
+		self.state = GameState::default();
+		self.next_room();
 	}
 
 	pub fn offscreen_draw(&mut self, ctx: &mut AppContext) {
-		if !self.distorting {
+		if !self.state.distorting {
 			// Clear canvas with an image
 			Sprite::from(&ctx.assets.titles_bg).draw(&mut ctx.painter, self.distort_canvas);
+			ctx.painter.clear(Some(self.distort_canvas_last));
 			return;
 		};
 
@@ -504,8 +518,8 @@ impl Scoloc {
 
 		self.draw_room(ctx, canvas);
 
-		self.draw_stat(ctx, canvas, 26.0, IconKind::Heart, self.health);
-		self.draw_stat(ctx, canvas, 56.0, IconKind::Sword, self.weapon);
+		self.draw_stat(ctx, canvas, 26.0, IconKind::Heart, self.state.health);
+		self.draw_stat(ctx, canvas, 56.0, IconKind::Sword, self.state.weapon);
 		self.draw_killed_monsters(ctx, canvas);
 		self.draw_description(ctx, canvas);
 
@@ -570,7 +584,7 @@ impl Scoloc {
 		const X: f32 = DS - 70.0;
 		const Y: f32 = 94.0;
 
-		for (i, grade) in self.killed_cards.iter().enumerate() {
+		for (i, grade) in self.state.killed_cards.iter().enumerate() {
 			let frame = grade.value() as i32 - 2;
 			let mut sprite = Sprite::from(&ctx.assets.small_card).with_frame((frame, 0));
 			sprite.pos.set(X, Y + i as f32 * 10.0);
@@ -597,14 +611,14 @@ impl Scoloc {
 				self.rules_opened = false;
 			} else {
 				titles_ctx.goto_screen(Screen::default());
-				self.reset(ctx);
+				self.reset();
 			}
 		}
 		if TUTORIAL_BTN.is_hover(&mut ctx.input) && ctx.input.left_just_pressed() {
 			self.rules_opened ^= true;
 		}
 
-		if !self.prev_ran && !self.paused() {
+		if !self.state.prev_ran && !self.paused() {
 			if RUN_BTN.is_hover(&mut ctx.input) && ctx.input.left_just_pressed() {
 				self.run();
 			}
@@ -630,12 +644,12 @@ impl Scoloc {
 	}
 	fn draw_room(&mut self, ctx: &mut AppContext, canvas: CanvasId) {
 		for (i, sprite) in self.card_sprites.iter_mut().enumerate() {
-			let Some(card) = self.room[i] else {
+			let Some(card) = self.state.room[i] else {
 				continue;
 			};
 
 			// Dim hearts cards if potion was used on the prev step
-			if self.used_potion && card.kind == CardKind::Hearts {
+			if self.state.used_potion && card.kind == CardKind::Hearts {
 				sprite.inner.foreground = Color::gray(0.5);
 			} else {
 				sprite.inner.foreground = Color::WHITE;
@@ -649,7 +663,9 @@ impl Scoloc {
 
 		// Draw currently hovered card name and value
 		if let Some(idx) = self.hovered_card_idx {
-			let Some(card) = &self.room[idx] else { return };
+			let Some(card) = &self.state.room[idx] else {
+				return;
+			};
 
 			Text::new(&ctx.assets.serif_font)
 				.with_fg(Color::BLACK)
@@ -662,7 +678,7 @@ impl Scoloc {
 	}
 
 	fn draw_alert(&self, ctx: &mut AppContext, canvas: CanvasId) {
-		let Some(kind) = self.alert_kind else {
+		let Some(kind) = self.state.alert_kind else {
 			return;
 		};
 
@@ -712,9 +728,11 @@ impl Scoloc {
 	}
 
 	fn paused(&self) -> bool {
-		self.alert_kind.is_some() || self.rules_opened
+		self.state.alert_kind.is_some() || self.rules_opened
 	}
 	fn is_game_over(&self) -> bool {
-		self.alert_kind.is_some_and(|k| k == AlertKind::GameOver)
+		self.state
+			.alert_kind
+			.is_some_and(|k| k == AlertKind::GameOver)
 	}
 }
