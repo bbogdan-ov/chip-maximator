@@ -36,7 +36,7 @@ use crate::{
 	math::{Color, Rect},
 	painter::{BlendMode, CanvasId, Icon, IconKind, Merge, Sprite, Text},
 	state::{BoardSide, State},
-	util::{Anim, AnimRef, AnimWait, Easing, Keyframe, Timeline, TweenPlay},
+	util::{Anim, AnimRef, AnimWait, Easing, Timeline, TweenPlay},
 };
 
 use crate::app::{AppContext, CANVAS_HEIGHT, CANVAS_WIDTH};
@@ -101,6 +101,8 @@ pub struct Scene {
 }
 impl Scene {
 	pub fn new(ctx: &mut AppContext, state: &State) -> Self {
+		use crate::util::Keyframe as K;
+
 		let front_board = FrontBoard::new(ctx);
 
 		let flip_anim = Anim::new(8, 0..ctx.assets.board_flip.frames.x).into_ref();
@@ -108,31 +110,31 @@ impl Scene {
 		let explosion_anim = Anim::new(16, 0..ctx.assets.explosion.frames.x).into_ref();
 
 		let flip_timeline = Timeline::new([
-			Keyframe::action(Action::TogglePower),
-			Keyframe::tween(
+			K::action(Action::TogglePower),
+			K::tween(
 				state.valve.angle.clone(),
 				TweenPlay::new(0.0, 300, Easing::InOutSine),
 			),
-			Keyframe::action(Action::SetAnim(BoardAnim::Front)),
-			Keyframe::group([
-				Keyframe::sound(ctx.assets.swipe_sound),
-				Keyframe::anim(flip_anim.clone(), AnimWait::Finish),
-				Keyframe::action(Action::SetAnim(BoardAnim::Flipping)),
+			K::action(Action::SetAnim(BoardAnim::Front)),
+			K::group([
+				K::sound(ctx.assets.swipe_sound),
+				K::anim(flip_anim.clone(), AnimWait::Finish),
+				K::action(Action::SetAnim(BoardAnim::Flipping)),
 			]),
-			Keyframe::action(Action::SetAnim(BoardAnim::Back)),
-			Keyframe::delay(1000 / 8),
+			K::action(Action::SetAnim(BoardAnim::Back)),
+			K::delay(1000 / 8),
 		]);
 
 		let explode_timeline = Timeline::new([
-			Keyframe::sound(ctx.assets.explosion_sound),
-			Keyframe::anim(explosion_anim.clone(), AnimWait::Frame(3)),
-			Keyframe::action(Action::Reset),
-			Keyframe::action(Action::SetAnim(BoardAnim::Falling)),
-			Keyframe::delay(1500),
-			Keyframe::sound(ctx.assets.fall_sound),
-			Keyframe::delay(500),
-			Keyframe::anim(fall_anim.clone(), AnimWait::Finish),
-			Keyframe::action(Action::SetAnim(BoardAnim::Front)),
+			K::sound(ctx.assets.explosion_sound),
+			K::anim(explosion_anim.clone(), AnimWait::Frame(3)),
+			K::action(Action::Reset),
+			K::action(Action::SetAnim(BoardAnim::Falling)),
+			K::delay(1500),
+			K::sound(ctx.assets.fall_sound),
+			K::delay(500),
+			K::anim(fall_anim.clone(), AnimWait::Finish),
+			K::action(Action::SetAnim(BoardAnim::Front)),
 		]);
 
 		let whistle_sound = ctx
