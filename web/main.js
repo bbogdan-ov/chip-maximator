@@ -21,10 +21,18 @@ function handleProgress(loadedBytes, totalBytes) {
 	}
 }
 
+function showError(msg) {
+	const el = document.createElement("span");
+	el.className = "error"
+	el.textContent = msg;
+	loadingPopup.appendChild(el);
+
+	console.error(msg);
+}
+
 async function load(wasmPath) {
 	if (typeof WebAssembly.compileStreaming !== 'function') {
-		// TODO: show error in ui
-		console.error("No `WebAssembly.compileStreaming` method found. May be your browser is ass??");
+		showError("Error: No `WebAssembly.compileStreaming` method found. May be your browser is ass??")
 		return;
 	}
 
@@ -78,8 +86,8 @@ async function load(wasmPath) {
 
 			const crate_version = wasm_exports.crate_version();
 			if (version != crate_version) {
-				console.error(
-					`Version mismatch: gl.js version is: ${version},`,
+				showError(
+					`Error: Version mismatch: gl.js version is: ${version},`,
 					`miniquad crate version is: ${crate_version}`
 				);
 			}
@@ -88,8 +96,7 @@ async function load(wasmPath) {
 			obj.exports.main();
 		})
 		.catch(err => {
-			// TODO: show error in ui
-			console.error(err);
+			showError("Unknown error:", err);
 		})
 }
 
