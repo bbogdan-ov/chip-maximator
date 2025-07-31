@@ -68,7 +68,7 @@ pub struct AppContext {
 #[allow(clippy::unused_io_amount)]
 #[cfg(not(target_arch = "wasm32"))]
 fn read_rom(path: impl AsRef<Path>) -> Option<[u8; Emu::PROGRAM_SIZE]> {
-	// TODO: notify users about ROM reading errors
+	// TODO: return file open/reading error
 
 	use crate::emu::Emu;
 	use std::io::Read;
