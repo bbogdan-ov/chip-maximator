@@ -20,9 +20,9 @@ pub struct GameInfo {
 }
 
 pub const GAMES: &[GameInfo] = &[
+	game!("outlaw"),
 	game!("tracer"),
 	game!("langtons-ant"),
-	game!("outlaw"),
 	game!("vers"),
 	game!("rush-hour"),
 	game!("blinky"),

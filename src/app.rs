@@ -20,7 +20,7 @@ use crate::{
 pub const CANVAS_WIDTH: f32 = 700.0;
 pub const CANVAS_HEIGHT: f32 = 700.0;
 
-const DEFAULT_ROM: &[u8] = include_bytes!("../roms/outlaw.ch8");
+const DEFAULT_ROM: &[u8] = crate::games::GAMES[0].bytes;
 
 /// Time
 pub struct Time {
