@@ -62,7 +62,9 @@ macro_rules! assets {
 							Default::default()
 						);
 
-						println!("texture \"{}\" decompressed", stringify!($tex_name));
+						if cfg!(debug_assertions) {
+							println!("texture \"{}\" decompressed", stringify!($tex_name));
+						}
 
 						AssetTexture {
 							id: texture,
@@ -90,7 +92,9 @@ macro_rules! assets {
 							}
 						);
 
-						println!("font \"{}\" decompressed", stringify!($font_name));
+						if cfg!(debug_assertions) {
+							println!("font \"{}\" decompressed", stringify!($font_name));
+						}
 
 						Font {
 							texture,
