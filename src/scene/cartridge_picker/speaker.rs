@@ -1,3 +1,5 @@
+use std::clone;
+
 use crate::{
 	app::{AppContext, CANVAS_WIDTH},
 	math::Point,
@@ -32,27 +34,26 @@ impl Speaker {
 			.draw(&mut ctx.painter, canvas);
 	}
 	fn draw_buttons(&self, ctx: &mut AppContext, canvas: CanvasId) {
-		let play_pos = Self::POS + Point::new(26.0, 10.0);
-		let stop_pos = Self::POS + Point::new(52.0, 10.0);
-
 		let mut button = Sprite::from(&ctx.assets.speaker_button);
 
-		button.frame.set(0, 0);
-		button.pos = play_pos;
-		if button.is_hover(&mut ctx.input) {
-			if ctx.input.left_is_pressed() {
-				button.frame.y = 1;
-			}
-		}
-		button.draw(&mut ctx.painter, canvas);
+		let mut draw = |idx: i32, pos: Point| -> bool {
+			button.frame.set(idx, 0);
+			button.pos = pos;
 
-		button.frame.set(1, 0);
-		button.pos = stop_pos;
-		if button.is_hover(&mut ctx.input) {
-			if ctx.input.left_is_pressed() {
-				button.frame.y = 1;
+			let mut clicked = false;
+			if button.is_hover(&mut ctx.input) {
+				if ctx.input.left_is_pressed() {
+					button.frame.y = 1;
+				}
+
+				clicked = ctx.input.left_just_pressed();
 			}
-		}
-		button.draw(&mut ctx.painter, canvas);
+
+			button.draw(&mut ctx.painter, canvas);
+			clicked
+		};
+
+		draw(0, Self::POS + Point::new(26.0, 10.0));
+		draw(1, Self::POS + Point::new(52.0, 10.0));
 	}
 }
