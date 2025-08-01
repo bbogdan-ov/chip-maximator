@@ -1,5 +1,3 @@
-use std::clone;
-
 use crate::{
 	app::{AppContext, CANVAS_WIDTH},
 	math::Point,
