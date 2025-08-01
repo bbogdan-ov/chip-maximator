@@ -4,6 +4,8 @@ use crate::{
 	painter::{CanvasId, Sprite},
 };
 
+/// Speaker
+/// Reads and speaks cartridge program bytes out loud
 pub struct Speaker {}
 impl Speaker {
 	const POS: Point = Point::new(CANVAS_WIDTH - 340.0, 30.0);
@@ -51,7 +53,9 @@ impl Speaker {
 			clicked
 		};
 
+		// Play button
 		draw(0, Self::POS + Point::new(26.0, 10.0));
+		// Stop button
 		draw(1, Self::POS + Point::new(52.0, 10.0));
 	}
 }
