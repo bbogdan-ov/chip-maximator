@@ -1,4 +1,8 @@
+mod speaker;
+
 use std::{cmp::Ordering, f32};
+
+use speaker::Speaker;
 
 use crate::{
 	app::{AppContext, CANVAS_HEIGHT, CANVAS_WIDTH},
@@ -87,6 +91,8 @@ pub struct CartridgePicker {
 	cards: Vec<Card>,
 	sorted_cards: Vec<usize>,
 
+	speaker: Speaker,
+
 	angle: f32,
 	velocity: f32,
 }
@@ -102,6 +108,8 @@ impl Default for CartridgePicker {
 			sorted_cards: (0..cards.len()).collect(),
 			cards,
 
+			speaker: Speaker::new(),
+
 			angle: 0.0,
 			velocity: 0.0,
 		}
@@ -115,7 +123,6 @@ impl CartridgePicker {
 		// Draw darken rect
 		Sprite::new(ctx.painter.white_texture, (CANVAS_WIDTH, CANVAS_HEIGHT))
 			.with_fg((0.0, 0.0, 0.0))
-			.with_opacity(0.8)
 			.draw(&mut ctx.painter, canvas);
 
 		let count = self.cards.len();
@@ -159,5 +166,7 @@ impl CartridgePicker {
 		for i in self.sorted_cards.iter() {
 			self.cards[*i].draw(ctx, canvas);
 		}
+
+		self.speaker.draw(ctx, canvas);
 	}
 }

@@ -359,7 +359,7 @@ impl Scene {
 		self.draw_flip_trigger(ctx, state, canvas);
 		self.draw_tooltip(ctx, canvas);
 
-		// self.picker.draw(ctx, canvas);
+		self.picker.draw(ctx, canvas);
 	}
 
 	fn draw_tooltip(&self, ctx: &mut AppContext, canvas: CanvasId) {
