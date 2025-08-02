@@ -48,10 +48,14 @@ pub struct Speaker {
 	/// Current unsigned 4-bit int index in cartridge ROM
 	cur_nibble_idx: usize,
 	cur_pronounce: usize,
+	is_pronouncing: bool,
+
 	/// Delay between nibble pronounciation
 	nibble_timer: Timer,
 	/// Delay between pronounce animations
 	pronounce_timer: Timer,
+	/// Delay before closing eyes
+	rest_timer: Timer,
 
 	speaker_frame: i32,
 }
@@ -64,20 +68,54 @@ impl Speaker {
 			cur_nibble: 0,
 			cur_nibble_idx: 0,
 			cur_pronounce: 0,
+			is_pronouncing: false,
+
 			nibble_timer: Timer::from_millis(1000),
 			pronounce_timer: Timer::from_millis(100),
+			rest_timer: Timer::from_millis(1500),
 
 			speaker_frame: 0,
 		}
 	}
 
 	pub fn update(&mut self, ctx: &mut AppContext, state: &State) {
-		self.update_speaking(ctx, state);
-	}
-	fn update_speaking(&mut self, ctx: &mut AppContext, state: &State) {
+		self.rest_timer.update(&ctx.time);
 		self.nibble_timer.update(&ctx.time);
 		self.pronounce_timer.update(&ctx.time);
 
+		self.update_speaking(ctx, state);
+
+		let p = self.rest_timer.progress();
+		if p >= 1.0 {
+			self.speaker_frame = 0;
+		} else if p > 0.8 {
+			self.speaker_frame = 1;
+		}
+
+		if self.pronounce_timer.finished() && self.is_pronouncing {
+			let pronounces = LETTERS_PRONOUNCE[self.cur_nibble as usize];
+			if self.cur_pronounce >= pronounces.len() {
+				self.speaker_frame = 2;
+				self.is_pronouncing = false;
+				return;
+			}
+
+			match pronounces[self.cur_pronounce] {
+				Pronounce::A => self.speaker_frame = 3,
+				Pronounce::AAA => self.speaker_frame = 4,
+				Pronounce::OOO => self.speaker_frame = 5,
+				Pronounce::III => self.speaker_frame = 6,
+				Pronounce::FFF => self.speaker_frame = 7,
+			}
+
+			if self.speaking || self.cur_pronounce > 0 {
+				self.cur_pronounce += 1;
+				self.pronounce_timer.start();
+				self.rest_timer.start();
+			}
+		}
+	}
+	fn update_speaking(&mut self, ctx: &mut AppContext, state: &State) {
 		if !self.speaking {
 			return;
 		}
@@ -114,26 +152,8 @@ impl Speaker {
 			ctx.audio.play(sounds[self.cur_nibble as usize]);
 
 			self.cur_nibble_idx += 1;
+			self.is_pronouncing = true;
 			self.nibble_timer.start();
-		}
-
-		if self.pronounce_timer.finished() {
-			let pronounces = LETTERS_PRONOUNCE[self.cur_nibble as usize];
-			if self.cur_pronounce >= pronounces.len() {
-				self.speaker_frame = 2;
-				return;
-			}
-
-			match pronounces[self.cur_pronounce] {
-				Pronounce::A => self.speaker_frame = 3,
-				Pronounce::AAA => self.speaker_frame = 4,
-				Pronounce::OOO => self.speaker_frame = 5,
-				Pronounce::III => self.speaker_frame = 6,
-				Pronounce::FFF => self.speaker_frame = 7,
-			}
-
-			self.cur_pronounce += 1;
-			self.pronounce_timer.start();
 		}
 	}
 
