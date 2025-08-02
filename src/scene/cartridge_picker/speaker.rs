@@ -53,7 +53,6 @@ impl Speaker {
 				ctx.assets.sound_c,
 				ctx.assets.sound_d,
 				ctx.assets.sound_e,
-				ctx.assets.sound_e,
 				ctx.assets.sound_f,
 			];
 
