@@ -202,6 +202,8 @@ impl Scene {
 		self.update_emu(state);
 		self.update_heat(state);
 
+		self.picker.update(ctx, state);
+
 		if cfg!(debug_assertions) && ctx.input.key_just_pressed(KeyCode::Enter) {
 			self.explode();
 		}

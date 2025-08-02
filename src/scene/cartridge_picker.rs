@@ -9,6 +9,7 @@ use crate::{
 	games::{GAMES, GameInfo},
 	math::{Color, FloatMath, Lerp, Point},
 	painter::{CanvasId, Icon, IconKind, Sprite, Text},
+	state::State,
 	util::Anim,
 };
 
@@ -116,6 +117,10 @@ impl Default for CartridgePicker {
 	}
 }
 impl CartridgePicker {
+	pub fn update(&mut self, ctx: &mut AppContext, state: &State) {
+		self.speaker.update(ctx, state);
+	}
+
 	pub fn draw(&mut self, ctx: &mut AppContext, canvas: CanvasId) {
 		const PI: f32 = f32::consts::PI;
 		const PI2: f32 = f32::consts::TAU;
