@@ -237,5 +237,7 @@ assets! {
 		sound_d => "d",
 		sound_e => "e",
 		sound_f => "f",
+
+		TEMP_sound => "TEMP-crush",
 	}
 }

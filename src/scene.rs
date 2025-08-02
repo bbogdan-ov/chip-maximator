@@ -146,7 +146,7 @@ impl Scene {
 		Self {
 			front_board,
 			back_board: BackBoard::new(ctx),
-			picker: CartridgePicker::default(),
+			picker: CartridgePicker::new(ctx),
 
 			was_power: state.board.power,
 			cur_board_anim: match state.board.side {
@@ -296,6 +296,8 @@ impl Scene {
 	}
 
 	fn offscreen_draw(&mut self, ctx: &mut AppContext, state: &mut State) {
+		self.picker.offscreen_draw(ctx);
+
 		match self.cur_board_anim {
 			// Front board
 			BoardAnim::Front => {

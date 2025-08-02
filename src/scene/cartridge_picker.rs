@@ -97,8 +97,8 @@ pub struct CartridgePicker {
 	angle: f32,
 	velocity: f32,
 }
-impl Default for CartridgePicker {
-	fn default() -> Self {
+impl CartridgePicker {
+	pub fn new(ctx: &mut AppContext) -> Self {
 		let mut cards = Vec::with_capacity(GAMES.len());
 
 		for info in GAMES {
@@ -109,18 +109,20 @@ impl Default for CartridgePicker {
 			sorted_cards: (0..cards.len()).collect(),
 			cards,
 
-			speaker: Speaker::new(),
+			speaker: Speaker::new(ctx),
 
 			angle: 0.0,
 			velocity: 0.0,
 		}
 	}
-}
-impl CartridgePicker {
+
 	pub fn update(&mut self, ctx: &mut AppContext, state: &State) {
 		self.speaker.update(ctx, state);
 	}
 
+	pub fn offscreen_draw(&mut self, ctx: &mut AppContext) {
+		self.speaker.offscreen_draw(ctx);
+	}
 	pub fn draw(&mut self, ctx: &mut AppContext, canvas: CanvasId) {
 		const PI: f32 = f32::consts::PI;
 		const PI2: f32 = f32::consts::TAU;
@@ -168,9 +170,9 @@ impl CartridgePicker {
 			card.selected = true;
 		}
 
-		for i in self.sorted_cards.iter() {
-			self.cards[*i].draw(ctx, canvas);
-		}
+		// for i in self.sorted_cards.iter() {
+		// 	self.cards[*i].draw(ctx, canvas);
+		// }
 
 		self.speaker.draw(ctx, canvas);
 	}
