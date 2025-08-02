@@ -192,7 +192,7 @@ assets! {
 		movie_display_uv => "movie-display-uv", 700, 700, 6, 1,
 
 		cartridge => "cartridge", 125, 133, 16, 1,
-		speaker => "speaker", 125, 210, 8, 1,
+		speaker => "speaker", 134, 210, 15, 1,
 		speaker_window => "speaker-window", 310, 310, 1, 1,
 		speaker_button => "speaker-button", 24, 16, 2, 2,
 
