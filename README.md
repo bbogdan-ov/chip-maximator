@@ -1,7 +1,5 @@
 # CHIP MAXIMATOR
 
-CHIP MAXIMATOR
-
 *To be added...*
 
 
@@ -12,6 +10,28 @@ CHIP MAXIMATOR
 ![The back board with SCOLOC game running](./screenshots/2.png)
 
 ![Speaker](./screenshots/3.png)
+
+
+## Building
+
+*Only tested on Linux and Web builds*
+
+To build this EXPERIENCE you need to install [rust](https://www.rust-lang.org) programming language first
+
+Build and run natively:
+
+```sh
+cargo run --release
+cargo run --release -- path/to/game.rom
+```
+
+Build and run web version (NO AUDIO):
+
+```sh
+./build-web.sh --release
+cd web/
+basic-http-server # or any other http server
+```
 
 
 ## License
