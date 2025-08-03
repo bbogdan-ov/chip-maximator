@@ -10,7 +10,7 @@ fn main() {
 	decode_sounds();
 }
 
-/// Creates dir inside OUT_DIR if not exists
+/// Creates a dir inside OUT_DIR if doesn't exist
 fn create_out_subdir(name: &str) -> PathBuf {
 	let out_dir = PathBuf::from(std::env::var("OUT_DIR").unwrap());
 	let dir = out_dir.join(name);
@@ -68,8 +68,8 @@ fn decode_textures() {
 
 fn decode_sounds() {
 	// TODO: add audio compression...
-	//       I tried to implement it, but then the audio playback code must be refactored.
-	//       Audio compression doesn't give that much size loss (only a couple of Kb) anyway,
+	//       I tried to implement it, but the audio playback code must be refactored.
+	//       Audio compression doesn't give that much size compressiong (only a couple of Kb) anyway,
 	//       so i don't think there is a need for it
 
 	let out_dir = create_out_subdir("sounds");
