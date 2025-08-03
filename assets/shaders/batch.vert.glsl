@@ -16,12 +16,3 @@ void main() {
 
 	gl_Position = vec4((a_pos / u_view_size_px * 2.0) + vec2(-1.0, -1.0), 0.0, 1.0);
 }
-// void main() {
-// 	uv = a_uv;
-//
-// 	lowp vec2 vert_pos = a_pos + vec2(0.0, -1.0);
-// 	lowp vec2 vert_scale = u_size_px / u_view_size_px * 2.0;
-// 	lowp vec2 vert_offset = (u_pos_px / u_view_size_px * 2.0) * vec2(1.0, -1.0) + vec2(-1.0, 1.0);
-//
-// 	gl_Position = vec4(vert_pos * vert_scale + vert_offset, 0.0, 1.0);
-// }
