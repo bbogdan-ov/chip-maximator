@@ -24,6 +24,32 @@ fn to_key_code(key: u8) -> KeyCode {
 	][key as usize]
 }
 
+fn key_code_to_char(key: KeyCode) -> u8 {
+	match key {
+		KeyCode::Key1 => b'1',
+		KeyCode::Key2 => b'2',
+		KeyCode::Key3 => b'3',
+		KeyCode::Key4 => b'4',
+
+		KeyCode::Q => b'Q',
+		KeyCode::W => b'W',
+		KeyCode::E => b'E',
+		KeyCode::R => b'R',
+
+		KeyCode::A => b'A',
+		KeyCode::S => b'S',
+		KeyCode::D => b'D',
+		KeyCode::F => b'F',
+
+		KeyCode::Z => b'Z',
+		KeyCode::X => b'X',
+		KeyCode::C => b'C',
+		KeyCode::V => b'V',
+
+		_ => 0,
+	}
+}
+
 /// Front board keyboard
 #[derive(Default)]
 pub struct Keyboard;
@@ -35,32 +61,6 @@ impl Keyboard {
 		0x7, 0x8, 0x9, 0xe,
 		0xa, 0x0, 0xb, 0xf,
 	];
-
-	fn key_code_to_char(key: KeyCode) -> u8 {
-		match key {
-			KeyCode::Key1 => b'1',
-			KeyCode::Key2 => b'2',
-			KeyCode::Key3 => b'3',
-			KeyCode::Key4 => b'4',
-
-			KeyCode::Q => b'Q',
-			KeyCode::W => b'W',
-			KeyCode::E => b'E',
-			KeyCode::R => b'R',
-
-			KeyCode::A => b'A',
-			KeyCode::S => b'S',
-			KeyCode::D => b'D',
-			KeyCode::F => b'F',
-
-			KeyCode::Z => b'Z',
-			KeyCode::X => b'X',
-			KeyCode::C => b'C',
-			KeyCode::V => b'V',
-
-			_ => 0,
-		}
-	}
 
 	pub fn draw(&self, ctx: &mut AppContext, state: &mut State, canvas: CanvasId) {
 		// Keys position is sampled from GIMP
@@ -96,7 +96,7 @@ impl Keyboard {
 			if sprite.hovered {
 				let mut msg = *b"Key 0x\0 [\0]";
 				msg[6] = key.to_hex_str_bytes(false)[0];
-				msg[9] = Self::key_code_to_char(key_code);
+				msg[9] = key_code_to_char(key_code);
 				ctx.tooltip.set(&msg);
 			}
 
