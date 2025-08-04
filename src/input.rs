@@ -23,6 +23,8 @@ pub struct Input {
 	pub mouse_pos: Point,
 	/// Mouse position relative to the canvas on the last frame
 	pub mouse_last_pos: Point,
+	/// Mouse position relative to the canvas after a button press
+	pub mouse_press_pos: Point,
 	pub mouse_movement: Point,
 	pub mouse_is_pressed: bool,
 	pub mouse_just_pressed: bool,
@@ -44,6 +46,7 @@ impl Default for Input {
 			real_mouse_pos: Point::default(),
 			mouse_pos: Point::default(),
 			mouse_last_pos: Point::default(),
+			mouse_press_pos: Point::default(),
 			mouse_movement: Point::default(),
 			mouse_is_pressed: false,
 			mouse_just_pressed: false,
@@ -61,6 +64,11 @@ impl Default for Input {
 	}
 }
 impl Input {
+	pub fn update(&mut self) {
+		if self.left_just_pressed() {
+			self.mouse_press_pos = self.mouse_pos;
+		}
+	}
 	pub fn update_after(&mut self) {
 		// Update cursor icon
 		if self.prev_cursor_icon != self.cursor_icon {

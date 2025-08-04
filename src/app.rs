@@ -173,6 +173,7 @@ impl EventHandler for App {
 
 		ctx.time.update();
 		ctx.tooltip.update(&ctx.time);
+		ctx.input.update();
 
 		ctx.icons_anim.update(&ctx.time);
 
