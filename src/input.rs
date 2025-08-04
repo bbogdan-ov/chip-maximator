@@ -136,6 +136,6 @@ impl Input {
 	}
 	/// Difference between current mouse position and button press position
 	pub fn mouse_drag_delta(&self) -> Point {
-		self.mouse_press_pos - self.mouse_pos
+		self.mouse_pos - self.mouse_press_pos
 	}
 }
