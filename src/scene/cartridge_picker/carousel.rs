@@ -81,9 +81,11 @@ pub struct Carousel {
 
 	angle: f32,
 	velocity: f32,
+	angle_before_sort: f32,
 }
 impl Carousel {
-	const POS: Point = Point::new(120.0, CANVAS_WIDTH / 2.0);
+	const HEIGHT: f32 = 300.0;
+	const POS: Point = Point::new(100.0, CANVAS_WIDTH / 2.0);
 	/// Angle between each cartridge sprite (in radians)
 	const ANGLE_BETWEEN: f32 = PI / (GAMES.len() as f32 / 2.0);
 
@@ -100,6 +102,8 @@ impl Carousel {
 
 			angle: 0.0,
 			velocity: 0.0,
+			// Set it to max to trigger the first sorting in `update`
+			angle_before_sort: f32::MAX,
 		}
 	}
 
@@ -118,16 +122,22 @@ impl Carousel {
 
 		self.update_velocity(ctx);
 
+		// Place cartridge sprites in circle
 		for (i, card) in self.cards.iter_mut().enumerate() {
-			let a = i as f32 / COUNT * TAU + self.angle + Self::ANGLE_BETWEEN / 2.0;
+			let idx = i as f32;
+			let a = self.angle + idx / COUNT * TAU + Self::ANGLE_BETWEEN / 2.0;
 
 			card.pos_z = (a.cos() + 1.0) / 2.0;
 			card.pos.x = Self::POS.x;
-			card.pos.y = Self::POS.y + a.sin() * 300.0;
+			card.pos.y = Self::POS.y + a.sin() * Self::HEIGHT;
 			card.selected = false;
 		}
 
-		self.sort_cards();
+		// Sort sprites only when angle was changed so that sprites Z pos changed significantly
+		if (self.angle - self.angle_before_sort).abs() >= Self::ANGLE_BETWEEN {
+			self.sort_cards();
+			self.angle_before_sort = self.angle;
+		}
 
 		if let Some(i) = self.sorted_cards.last() {
 			let card = &mut self.cards[*i];
@@ -138,7 +148,8 @@ impl Carousel {
 		if ctx.input.left_is_pressed() {
 			self.velocity = -ctx.input.mouse_movement.y / CANVAS_HEIGHT * PI;
 		} else {
-			self.velocity += (self.angle.snap_round(Self::ANGLE_BETWEEN) - self.angle) / 100.0;
+			let snap_to_angle = self.angle.snap_round(Self::ANGLE_BETWEEN);
+			self.velocity += (snap_to_angle - self.angle) / 100.0;
 		}
 
 		self.velocity *= 0.95;
