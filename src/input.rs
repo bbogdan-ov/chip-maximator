@@ -65,7 +65,7 @@ impl Default for Input {
 }
 impl Input {
 	pub fn update(&mut self) {
-		if self.left_just_pressed() {
+		if self.mouse_just_pressed {
 			self.mouse_press_pos = self.mouse_pos;
 		}
 	}
