@@ -87,8 +87,10 @@ impl Speaker {
 
 		let p = self.rest_timer.progress();
 		if p >= 1.0 {
+			// Fully close eyes
 			self.speaker_frame = 0;
-		} else if p > 0.8 {
+		} else if p > 0.9 {
+			// Close eyes in half
 			self.speaker_frame = 1;
 		}
 
