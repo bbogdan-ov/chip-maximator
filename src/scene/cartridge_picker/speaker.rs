@@ -60,7 +60,7 @@ pub struct Speaker {
 	speaker_frame: i32,
 }
 impl Speaker {
-	const POS: Point = Point::new(CANVAS_WIDTH - 340.0, 30.0);
+	const POS: Point = Point::new(CANVAS_WIDTH - 320.0, 30.0);
 
 	pub fn new() -> Self {
 		Self {
