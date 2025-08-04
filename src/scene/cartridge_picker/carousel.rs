@@ -71,17 +71,6 @@ impl Card {
 		text.pos = text.pos.floor();
 
 		text.draw_chars(&mut ctx.painter, canvas, bytes);
-
-		// Draw pointer icon
-		if self.selected {
-			Icon::new(&ctx.assets, IconKind::Pointer)
-				.with_pos((self.pos.x + 100.0, self.pos.y))
-				.draw(ctx, canvas);
-
-			Text::new(&ctx.assets.ibm_font)
-				.with_pos((self.pos.x + 150.0, self.pos.y))
-				.draw_str(&mut ctx.painter, canvas, self.info.desc);
-		}
 	}
 }
 
@@ -94,6 +83,10 @@ pub struct Carousel {
 	velocity: f32,
 }
 impl Carousel {
+	const POS: Point = Point::new(120.0, CANVAS_WIDTH / 2.0);
+	/// Angle between each cartridge sprite (in radians)
+	const ANGLE_BETWEEN: f32 = PI / (GAMES.len() as f32 / 2.0);
+
 	pub fn new() -> Self {
 		let mut cards = Vec::with_capacity(GAMES.len());
 
@@ -110,17 +103,42 @@ impl Carousel {
 		}
 	}
 
-	pub fn update(&mut self, ctx: &mut AppContext) {}
+	fn sort_cards(&mut self) {
+		// Sort cartridges by Z position
+		self.sorted_cards.sort_by(|ia, ib| {
+			let a = self.cards[*ia].pos_z;
+			let b = self.cards[*ib].pos_z;
 
-	pub fn draw(&mut self, ctx: &mut AppContext, canvas: CanvasId) {
-		let count = self.cards.len();
-		let n = count as f32;
-		let step = PI / (n / 2.0);
+			b.partial_cmp(&a).unwrap_or(Ordering::Equal)
+		});
+	}
 
+	pub fn update(&mut self, ctx: &mut AppContext) {
+		const COUNT: f32 = GAMES.len() as f32;
+
+		self.update_velocity(ctx);
+
+		for (i, card) in self.cards.iter_mut().enumerate() {
+			let a = i as f32 / COUNT * TAU + self.angle + Self::ANGLE_BETWEEN / 2.0;
+
+			card.pos_z = (a.cos() + 1.0) / 2.0;
+			card.pos.x = Self::POS.x;
+			card.pos.y = Self::POS.y + a.sin() * 300.0;
+			card.selected = false;
+		}
+
+		self.sort_cards();
+
+		if let Some(i) = self.sorted_cards.last() {
+			let card = &mut self.cards[*i];
+			card.selected = true;
+		}
+	}
+	fn update_velocity(&mut self, ctx: &mut AppContext) {
 		if ctx.input.left_is_pressed() {
 			self.velocity = -ctx.input.mouse_movement.y / CANVAS_HEIGHT * PI;
 		} else {
-			self.velocity += (self.angle.snap_round(step) - self.angle) / 100.0;
+			self.velocity += (self.angle.snap_round(Self::ANGLE_BETWEEN) - self.angle) / 100.0;
 		}
 
 		self.velocity *= 0.95;
@@ -130,27 +148,9 @@ impl Carousel {
 
 		self.angle += self.velocity;
 		self.angle %= TAU;
+	}
 
-		for (i, card) in self.cards.iter_mut().enumerate() {
-			card.pos_z = ((i as f32 / n * TAU + self.angle + step / 2.0).cos() + 1.0) / 2.0;
-			card.pos.x = 140.0;
-			card.pos.y =
-				(i as f32 / n * TAU + self.angle + step / 2.0).sin() * 300.0 + CANVAS_WIDTH / 2.0;
-			card.selected = false;
-		}
-
-		self.sorted_cards.sort_by(|ia, ib| {
-			let a = &self.cards[*ia].pos_z;
-			let b = &self.cards[*ib].pos_z;
-
-			b.partial_cmp(a).unwrap_or(Ordering::Equal)
-		});
-
-		if let Some(i) = self.sorted_cards.last() {
-			let card = &mut self.cards[*i];
-			card.selected = true;
-		}
-
+	pub fn draw(&mut self, ctx: &mut AppContext, canvas: CanvasId) {
 		for i in self.sorted_cards.iter() {
 			self.cards[*i].draw(ctx, canvas);
 		}
