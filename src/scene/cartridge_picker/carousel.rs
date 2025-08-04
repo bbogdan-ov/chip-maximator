@@ -179,7 +179,6 @@ pub struct Carousel {
 
 	angle: f32,
 	velocity: f32,
-	angle_before_sort: f32,
 }
 impl Carousel {
 	const HEIGHT: f32 = 300.0;
@@ -202,8 +201,6 @@ impl Carousel {
 
 			angle: 0.0,
 			velocity: 0.0,
-			// Set it to max to trigger the first sorting in `update`
-			angle_before_sort: f32::MAX,
 		}
 	}
 
@@ -234,11 +231,10 @@ impl Carousel {
 			card.update(ctx, &mut self.state, (x, y).into(), z);
 		}
 
-		// Sort sprites only when angle was changed so that sprites Z pos changed significantly
-		let angle_changed = (self.angle - self.angle_before_sort).abs() >= Self::ANGLE_BETWEEN;
-		if self.state.just_dragged || angle_changed {
+		// Sort sprites every 2nd frame to reduce overhead
+		// This solution is kinda bad, but it seems work
+		if ctx.time.elapsed % 2 == 0 {
 			self.sort_cards();
-			self.angle_before_sort = self.angle;
 		}
 
 		self.state.just_dragged = false;
