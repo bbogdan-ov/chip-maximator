@@ -27,6 +27,8 @@ pub struct Time {
 	last_time: NativeInstant,
 	/// Time elapsed from the last frame
 	pub delta: Duration,
+	/// Seconds elapsed from the last frame
+	pub delta_secs: f32,
 	/// Number of frames elapsed from the app start
 	pub elapsed: u32,
 }
@@ -35,6 +37,7 @@ impl Default for Time {
 		Self {
 			last_time: NativeInstant::now(),
 			delta: Duration::default(),
+			delta_secs: 0.0,
 			elapsed: 0,
 		}
 	}
@@ -44,6 +47,7 @@ impl Time {
 		self.elapsed = self.elapsed.wrapping_add(1);
 
 		self.delta = self.last_time.elapsed();
+		self.delta_secs = self.delta.as_secs_f32();
 		self.last_time = NativeInstant::now();
 	}
 
