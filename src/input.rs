@@ -134,4 +134,8 @@ impl Input {
 	pub fn is_consumed(&self) -> bool {
 		!self.consumed_by.is_empty()
 	}
+	/// Difference between current mouse position and button press position
+	pub fn mouse_drag_delta(&self) -> Point {
+		self.mouse_press_pos - self.mouse_pos
+	}
 }
