@@ -1,3 +1,5 @@
+use core::f32;
+
 use miniquad::CursorIcon;
 
 use crate::{
@@ -21,6 +23,8 @@ pub struct Sprite {
 	/// Current frame index on each axis
 	pub frame: Point<i32>,
 	pub flip: Point<bool>,
+	/// Sprite rotation angle in degrees
+	pub angle: f32,
 	/// Crop sprite, clamped to range `0.0..=1.0`
 	/// Sprite will be cropped bottom-to-top, right-to-left
 	pub crop: Point,
@@ -40,6 +44,7 @@ impl Sprite {
 			frames_count: Point::new(1, 1),
 			frame: Point::default(),
 			flip: Point::default(),
+			angle: 0.0,
 			crop: (1.0, 1.0).into(),
 			opacity: 1.0,
 			foreground: Color::WHITE,
@@ -75,6 +80,10 @@ impl Sprite {
 	/// texture
 	pub fn with_uv(mut self, texture: Texture) -> Self {
 		self.uv_texture = Some(texture);
+		self
+	}
+	pub fn with_angle(mut self, angle: f32) -> Self {
+		self.angle = angle;
 		self
 	}
 	pub fn with_crop(mut self, crop: impl Into<Point>) -> Self {
@@ -121,18 +130,18 @@ impl Sprite {
 		let mut uv = QUAD_FLIPPED_UV;
 		for row in &mut uv {
 			if self.flip.x {
-				row.0 = 1.0 - row.0;
+				row.x = 1.0 - row.x;
 			}
 			if self.flip.y {
-				row.1 = 1.0 - row.1;
+				row.y = 1.0 - row.y;
 			}
 
 			// Doing some calculations to crop the current frame
-			row.0 = (row.0 + frame_x) / frames_x;
-			row.1 = (row.1 + (frames_y - 1.0 - frame_y)) / frames_y;
+			row.x = (row.x + frame_x) / frames_x;
+			row.y = (row.y + (frames_y - 1.0 - frame_y)) / frames_y;
 
-			row.0 *= self.crop.x;
-			row.1 *= self.crop.y;
+			row.x *= self.crop.x;
+			row.y *= self.crop.y;
 		}
 
 		let minus_size = Point::new(
@@ -162,7 +171,43 @@ impl Sprite {
 				..Default::default()
 			},
 		);
-		painter.push_quad(pos, size - minus_size, uv, self.opacity);
+
+		let size = size - minus_size;
+
+		#[rustfmt::skip]
+		let mut verts = [
+			Point::new(pos.x,          pos.y),
+			Point::new(pos.x + size.x, pos.y),
+			Point::new(pos.x + size.x, pos.y + size.y),
+			Point::new(pos.x,          pos.y + size.y),
+		];
+
+		if self.angle != 0.0 {
+			// Not the most clear code, but hey, it works
+
+			let rads = self.angle.to_radians();
+			let cosine = rads.cos();
+			let sine = rads.sin();
+			let origin = pos + size / 2.0;
+
+			// Rotate one vertex around `origin`
+			macro_rules! rotate {
+				($idx:expr) => {{
+					let vert = &mut verts[$idx];
+					let dx = vert.x - origin.x;
+					let dy = vert.y - origin.y;
+					vert.x = dx * cosine - dy * sine + origin.x;
+					vert.y = dx * sine + dy * cosine + origin.y;
+				}};
+			}
+
+			rotate!(0);
+			rotate!(1);
+			rotate!(2);
+			rotate!(3);
+		}
+
+		painter.push_verts(verts, uv, self.opacity);
 	}
 	/// Draw the sprite onto canvas
 	pub fn draw(&self, painter: &mut Painter, canvas: CanvasId) {

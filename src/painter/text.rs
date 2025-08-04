@@ -124,7 +124,7 @@ impl<'a> Text<'a> {
 		let mut uv = QUAD_FLIPPED_UV;
 		for row in &mut uv {
 			// Doing some calculations to crop the current char
-			row.0 = (row.0 * f + findex + (1.0 - f) / 2.0) / self.font.count as f32;
+			row.x = (row.x * f + findex + (1.0 - f) / 2.0) / self.font.count as f32;
 		}
 		let pos = Point::new(
 			self.pos.x + self.char_offset_px,

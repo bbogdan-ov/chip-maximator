@@ -22,18 +22,18 @@ use binding::{Binding, BindingId, Index, VertAttr, Vertex};
 use crate::math::{Color, Point};
 
 #[rustfmt::skip]
-pub const QUAD_UV: [(f32, f32); 4] = [
-	(0.0, 0.0),
-	(1.0, 0.0),
-	(1.0, 1.0),
-	(0.0, 1.0),
+pub const QUAD_UV: [Point; 4] = [
+	Point::new(0.0, 0.0),
+	Point::new(1.0, 0.0),
+	Point::new(1.0, 1.0),
+	Point::new(0.0, 1.0),
 ];
 #[rustfmt::skip]
-pub const QUAD_FLIPPED_UV: [(f32, f32); 4] = [
-	(0.0, 1.0),
-	(1.0, 1.0),
-	(1.0, 0.0),
-	(0.0, 0.0),
+pub const QUAD_FLIPPED_UV: [Point; 4] = [
+	Point::new(0.0, 1.0),
+	Point::new(1.0, 1.0),
+	Point::new(1.0, 0.0),
+	Point::new(0.0, 0.0),
 ];
 
 #[derive(Debug, PartialEq)]
@@ -316,53 +316,25 @@ impl Painter {
 		self.batch_uniforms = uniforms;
 	}
 
-	/// Push quad into the current batch
-	pub fn push_quad(
-		&mut self,
-		pos: impl Into<Point>,
-		size: impl Into<Point>,
-		uv: [(f32, f32); 4],
-		opacity: f32,
-	) {
-		let pos: Point = pos.into();
-		let size: Point = size.into();
-
+	pub fn push_verts(&mut self, verts: [Point; 4], uv: [Point; 4], opacity: f32) {
 		let quads = self.batch_quads;
 		let vertices = &mut self.batch_vertices;
 		let indices = &mut self.batch_indices;
 
-		macro_rules! vertices {
-			($($idx:expr, $x:expr, $y:expr),*$(,)?) => {
-				$(
-					vertices[quads * 4 * 5 + $idx * 5 + 0] = $x;
-					vertices[quads * 4 * 5 + $idx * 5 + 1] = $y;
-					vertices[quads * 4 * 5 + $idx * 5 + 2] = uv[$idx].0;
-					vertices[quads * 4 * 5 + $idx * 5 + 3] = uv[$idx].1;
-					vertices[quads * 4 * 5 + $idx * 5 + 4] = opacity;
-				)*
-			};
-		}
-		macro_rules! indices {
-			($i1:expr, $i2:expr, $i3:expr, $i4:expr, $i5:expr, $i6:expr$(,)?) => {
-				indices[quads * 6 + 0] = quads as u32 * 4 + $i1;
-				indices[quads * 6 + 1] = quads as u32 * 4 + $i2;
-				indices[quads * 6 + 2] = quads as u32 * 4 + $i3;
-				indices[quads * 6 + 3] = quads as u32 * 4 + $i4;
-				indices[quads * 6 + 4] = quads as u32 * 4 + $i5;
-				indices[quads * 6 + 5] = quads as u32 * 4 + $i6;
-			};
+		for i in 0..4 {
+			vertices[quads * 4 * 5 + i * 5 + 0] = verts[i].x;
+			vertices[quads * 4 * 5 + i * 5 + 1] = verts[i].y;
+			vertices[quads * 4 * 5 + i * 5 + 2] = uv[i].x;
+			vertices[quads * 4 * 5 + i * 5 + 3] = uv[i].y;
+			vertices[quads * 4 * 5 + i * 5 + 4] = opacity;
 		}
 
-		vertices! {
-			0, pos.x,          pos.y,
-			1, pos.x + size.x, pos.y,
-			2, pos.x + size.x, pos.y + size.y,
-			3, pos.x,          pos.y + size.y,
-		}
-		indices! {
-			0, 1, 2,
-			2, 3, 0,
-		}
+		indices[quads * 6 + 0] = quads as u32 * 4 + 0;
+		indices[quads * 6 + 1] = quads as u32 * 4 + 1;
+		indices[quads * 6 + 2] = quads as u32 * 4 + 2;
+		indices[quads * 6 + 3] = quads as u32 * 4 + 2;
+		indices[quads * 6 + 4] = quads as u32 * 4 + 3;
+		indices[quads * 6 + 5] = quads as u32 * 4 + 0;
 
 		self.batch_quads += 1;
 
@@ -374,6 +346,27 @@ impl Painter {
 		if self.batch_quads >= Self::BATCH_MAX_QUADS {
 			self.draw();
 		}
+	}
+	/// Push quad into the current batch
+	pub fn push_quad(
+		&mut self,
+		pos: impl Into<Point>,
+		size: impl Into<Point>,
+		uv: [Point; 4],
+		opacity: f32,
+	) {
+		let pos: Point = pos.into();
+		let size: Point = size.into();
+
+		#[rustfmt::skip]
+		let verts = [
+			Point::new(pos.x,          pos.y),
+			Point::new(pos.x + size.x, pos.y),
+			Point::new(pos.x + size.x, pos.y + size.y),
+			Point::new(pos.x,          pos.y + size.y),
+		];
+
+		self.push_verts(verts, uv, opacity);
 	}
 
 	/// Returns reference to the [`Canvas`] by its id
