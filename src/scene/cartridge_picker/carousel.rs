@@ -41,8 +41,12 @@ struct Card {
 	sprite: Sprite,
 
 	pos: Point,
+	/// Position of the previous frame
+	prev_pos: Point,
 	pos_z: f32,
 	pos_tween: Tweenable,
+	/// Angle velocity
+	angle_velocity: f32,
 
 	is_trying_to_drag: bool,
 
@@ -52,11 +56,13 @@ impl Card {
 	fn new(ctx: &mut AppContext, info: &'static GameInfo) -> Self {
 		Self {
 			info,
-			sprite: Sprite::from(&ctx.assets.cartridge),
+			sprite: Sprite::from(&ctx.assets.cartridge).with_origin((0.5, 0.1)),
 
 			pos: Point::default(),
+			prev_pos: Point::default(),
 			pos_z: 0.0,
 			pos_tween: Tweenable::new(1.0),
+			angle_velocity: 0.0,
 
 			is_trying_to_drag: false,
 
@@ -86,6 +92,7 @@ impl Card {
 
 	fn lerp_to(&mut self, pos: Point, pos_z: f32) {
 		let t = self.pos_tween.value;
+		self.prev_pos = self.pos;
 		self.pos = self.pos.lerp(pos, t);
 		self.pos_z = self.pos_z.lerp(pos_z, t);
 	}
@@ -102,7 +109,8 @@ impl Card {
 
 		if state.is_dragging(idx) {
 			// Drag
-			self.lerp_to(ctx.input.mouse_pos, 0.0);
+			let pos = ctx.input.mouse_pos;
+			self.lerp_to((pos.x, pos.y + self.sprite.size.y / 3.0).into(), 0.0);
 
 			if ctx.input.left_just_released() {
 				self.end_drag(state);
@@ -116,6 +124,7 @@ impl Card {
 			}
 		}
 
+		self.update_velocity();
 		self.update_dragging(ctx, state, idx);
 	}
 	fn update_dragging(&mut self, ctx: &mut AppContext, state: &mut CarouselState, idx: usize) {
@@ -141,10 +150,20 @@ impl Card {
 				}
 			}
 		}
+	}
+	fn update_velocity(&mut self) {
+		// Tilt the sprite a little on movement
+		let angle = (self.pos.x - self.prev_pos.x) / 20.0;
+		self.angle_velocity += angle;
 
-		if state.is_dragging(idx) {
-			self.anim.update(&ctx.time);
+		if self.angle_velocity.abs() <= 1e-5 {
+			self.angle_velocity = 0.0;
+			return;
 		}
+
+		self.angle_velocity += (0.0 - self.sprite.angle) / 20.0;
+		self.angle_velocity *= 0.9;
+		self.sprite.angle += self.angle_velocity;
 	}
 
 	fn draw(&mut self, ctx: &mut AppContext, canvas: CanvasId) {
