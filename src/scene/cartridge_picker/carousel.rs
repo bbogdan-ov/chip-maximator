@@ -14,15 +14,24 @@ use crate::{
 
 /// Carousel state
 pub struct CarouselState {
-	pub is_dragging: bool,
+	/// Currently dragging cartridge index
+	pub dragging_idx: Option<usize>,
 	pub just_dragged: bool,
 }
 impl Default for CarouselState {
 	fn default() -> Self {
 		Self {
-			is_dragging: false,
+			dragging_idx: None,
 			just_dragged: false,
 		}
+	}
+}
+impl CarouselState {
+	pub fn is_dragging(&self, idx: usize) -> bool {
+		self.dragging_idx.is_some_and(|i| i == idx)
+	}
+	pub fn is_dragging_any(&self) -> bool {
+		self.dragging_idx.is_some()
 	}
 }
 
@@ -36,7 +45,6 @@ struct Card {
 	pos_tween: Tweenable,
 
 	is_trying_to_drag: bool,
-	is_dragging: bool,
 
 	anim: Anim,
 }
@@ -51,31 +59,28 @@ impl Card {
 			pos_tween: Tweenable::new(1.0),
 
 			is_trying_to_drag: false,
-			is_dragging: false,
 
 			anim: Anim::new(8, 8..16).with_looped().with_playing(),
 		}
 	}
 
-	fn start_drag(&mut self, state: &mut CarouselState) {
-		if state.is_dragging {
+	fn start_drag(&mut self, state: &mut CarouselState, idx: usize) {
+		if state.is_dragging_any() {
 			return;
 		}
 
 		let dur = Duration::from_millis(300);
 		self.pos_tween.play_from(0.0, 1.0, dur, Easing::Linear);
 
-		state.is_dragging = true;
+		state.dragging_idx = Some(idx);
 		state.just_dragged = true;
-		self.is_dragging = true;
 		self.is_trying_to_drag = false;
 	}
 	fn end_drag(&mut self, state: &mut CarouselState) {
 		let dur = Duration::from_millis(500);
 		self.pos_tween.play_from(0.0, 1.0, dur, Easing::InOutSine);
 
-		state.is_dragging = false;
-		self.is_dragging = false;
+		state.dragging_idx = None;
 		self.is_trying_to_drag = false;
 	}
 
@@ -89,12 +94,13 @@ impl Card {
 		&mut self,
 		ctx: &mut AppContext,
 		state: &mut CarouselState,
+		idx: usize,
 		target_pos: Point,
 		target_z: f32,
 	) {
 		self.pos_tween.update(&ctx.time);
 
-		if self.is_dragging {
+		if state.is_dragging(idx) {
 			// Drag
 			self.lerp_to(ctx.input.mouse_pos, 0.0);
 
@@ -110,23 +116,23 @@ impl Card {
 			}
 		}
 
-		self.update_dragging(ctx, state);
+		self.update_dragging(ctx, state, idx);
 	}
-	fn update_dragging(&mut self, ctx: &mut AppContext, state: &mut CarouselState) {
+	fn update_dragging(&mut self, ctx: &mut AppContext, state: &mut CarouselState, idx: usize) {
 		// Whether the cartridge can be dragged & dropped
 		let accessible = self.pos_z < 0.3;
 
 		if self.is_trying_to_drag {
-			if !ctx.input.left_is_pressed() || state.is_dragging {
+			if !ctx.input.left_is_pressed() || state.is_dragging_any() {
 				self.is_trying_to_drag = false;
 			}
 
 			if ctx.input.mouse_drag_delta().x.abs() > 40.0 {
-				self.start_drag(state);
+				self.start_drag(state, idx);
 			}
 		}
 
-		if accessible && !state.is_dragging {
+		if accessible && !state.is_dragging_any() {
 			if self.sprite.is_hover(&mut ctx.input) {
 				self.anim.update(&ctx.time);
 
@@ -136,7 +142,7 @@ impl Card {
 			}
 		}
 
-		if self.is_dragging {
+		if state.is_dragging(idx) {
 			self.anim.update(&ctx.time);
 		}
 	}
@@ -221,15 +227,14 @@ impl Carousel {
 		self.update_velocity(ctx);
 
 		// Place cartridge sprites in circle
-		for (i, card) in self.cards.iter_mut().enumerate() {
-			let idx = i as f32;
-			let a = self.angle + idx / COUNT * TAU + Self::ANGLE_BETWEEN / 2.0;
+		for (idx, card) in self.cards.iter_mut().enumerate() {
+			let a = self.angle + idx as f32 / COUNT * TAU + Self::ANGLE_BETWEEN / 2.0;
 
 			let x = Self::POS.x;
 			let y = Self::POS.y + a.sin() * Self::HEIGHT;
 			let z = (a.cos() + 1.0) / 2.0;
 
-			card.update(ctx, &mut self.state, (x, y).into(), z);
+			card.update(ctx, &mut self.state, idx, (x, y).into(), z);
 		}
 
 		// Sort sprites every 2nd frame to reduce overhead
@@ -242,7 +247,7 @@ impl Carousel {
 	}
 	fn update_velocity(&mut self, ctx: &mut AppContext) {
 		let is_rotating = ctx.input.left_is_pressed() && ctx.input.mouse_pos.x < CANVAS_WIDTH / 2.0;
-		if !self.state.is_dragging && is_rotating {
+		if !self.state.is_dragging_any() && is_rotating {
 			self.velocity = -ctx.input.mouse_movement.y / CANVAS_HEIGHT * PI;
 		} else {
 			let snap_to_angle = self.angle.snap_round(Self::ANGLE_BETWEEN);
