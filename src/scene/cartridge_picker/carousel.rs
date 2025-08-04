@@ -62,8 +62,8 @@ impl Card {
 			return;
 		}
 
-		self.pos_tween
-			.play_from(0.0, 1.0, Duration::from_millis(300), Easing::Linear);
+		let dur = Duration::from_millis(300);
+		self.pos_tween.play_from(0.0, 1.0, dur, Easing::Linear);
 
 		state.is_dragging = true;
 		state.just_dragged = true;
@@ -71,8 +71,8 @@ impl Card {
 		self.is_trying_to_drag = false;
 	}
 	fn end_drag(&mut self, state: &mut CarouselState) {
-		self.pos_tween
-			.play_from(0.0, 1.0, Duration::from_millis(500), Easing::InOutSine);
+		let dur = Duration::from_millis(500);
+		self.pos_tween.play_from(0.0, 1.0, dur, Easing::InOutSine);
 
 		state.is_dragging = false;
 		self.is_dragging = false;
@@ -241,7 +241,8 @@ impl Carousel {
 		self.state.just_dragged = false;
 	}
 	fn update_velocity(&mut self, ctx: &mut AppContext) {
-		if !self.state.is_dragging && ctx.input.left_is_pressed() {
+		let is_rotating = ctx.input.left_is_pressed() && ctx.input.mouse_pos.x < CANVAS_WIDTH / 2.0;
+		if !self.state.is_dragging && is_rotating {
 			self.velocity = -ctx.input.mouse_movement.y / CANVAS_HEIGHT * PI;
 		} else {
 			let snap_to_angle = self.angle.snap_round(Self::ANGLE_BETWEEN);
