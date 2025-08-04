@@ -7,7 +7,7 @@ use crate::{
 	app::{AppContext, CANVAS_HEIGHT, CANVAS_WIDTH},
 	games::{GAMES, GameInfo},
 	math::{Color, FloatMath, Lerp, Point},
-	painter::{CanvasId, Icon, IconKind, Sprite, Text},
+	painter::{CanvasId, Sprite, Text},
 	util::Anim,
 };
 
