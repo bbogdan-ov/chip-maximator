@@ -10,6 +10,7 @@ bitflags::bitflags! {
 	pub struct InputConsume: u8 {
 		const VALVE = 1 << 0;
 		const BOARD_ANIM = 1 << 1;
+		const OVERLAY = 1 << 2;
 	}
 }
 
