@@ -16,15 +16,14 @@ pub struct CartridgePicker {
 	carousel: Carousel,
 	speaker: Speaker,
 }
-impl Default for CartridgePicker {
-	fn default() -> Self {
+impl CartridgePicker {
+	pub fn new(ctx: &mut AppContext) -> Self {
 		Self {
-			carousel: Carousel::new(),
+			carousel: Carousel::new(ctx),
 			speaker: Speaker::new(),
 		}
 	}
-}
-impl CartridgePicker {
+
 	pub fn update(&mut self, ctx: &mut AppContext, state: &State) {
 		self.end_consume(ctx);
 
@@ -42,8 +41,8 @@ impl CartridgePicker {
 			.with_fg((0.0, 0.0, 0.0))
 			.draw(&mut ctx.painter, canvas);
 
-		self.carousel.draw(ctx, canvas);
 		self.speaker.draw(ctx, canvas);
+		self.carousel.draw(ctx, canvas);
 
 		self.begin_consume(ctx);
 	}

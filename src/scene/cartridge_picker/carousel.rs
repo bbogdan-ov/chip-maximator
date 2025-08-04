@@ -1,6 +1,7 @@
 use std::{
 	cmp::Ordering,
 	f32::consts::{PI, TAU},
+	time::Duration,
 };
 
 use crate::{
@@ -8,29 +9,134 @@ use crate::{
 	games::{GAMES, GameInfo},
 	math::{Color, FloatMath, Lerp, Point},
 	painter::{CanvasId, Sprite, Text},
-	util::Anim,
+	util::{Anim, Easing, Tweenable},
 };
+
+/// Carousel state
+pub struct CarouselState {
+	pub is_dragging: bool,
+	pub just_dragged: bool,
+}
+impl Default for CarouselState {
+	fn default() -> Self {
+		Self {
+			is_dragging: false,
+			just_dragged: false,
+		}
+	}
+}
 
 /// Cartridge card sprite
 struct Card {
 	info: &'static GameInfo,
+	sprite: Sprite,
 
 	pos: Point,
 	pos_z: f32,
-	selected: bool,
+	pos_tween: Tweenable,
+
+	is_trying_to_drag: bool,
+	is_dragging: bool,
 
 	anim: Anim,
 }
 impl Card {
-	fn new(info: &'static GameInfo) -> Self {
+	fn new(ctx: &mut AppContext, info: &'static GameInfo) -> Self {
 		Self {
 			info,
+			sprite: Sprite::from(&ctx.assets.cartridge),
 
 			pos: Point::default(),
 			pos_z: 0.0,
-			selected: false,
+			pos_tween: Tweenable::new(1.0),
+
+			is_trying_to_drag: false,
+			is_dragging: false,
 
 			anim: Anim::new(8, 8..16).with_looped().with_playing(),
+		}
+	}
+
+	fn start_drag(&mut self, state: &mut CarouselState) {
+		if state.is_dragging {
+			return;
+		}
+
+		self.pos_tween
+			.play_from(0.0, 1.0, Duration::from_millis(300), Easing::Linear);
+
+		state.is_dragging = true;
+		state.just_dragged = true;
+		self.is_dragging = true;
+		self.is_trying_to_drag = false;
+	}
+	fn end_drag(&mut self, state: &mut CarouselState) {
+		self.pos_tween
+			.play_from(0.0, 1.0, Duration::from_millis(500), Easing::InOutSine);
+
+		state.is_dragging = false;
+		self.is_dragging = false;
+		self.is_trying_to_drag = false;
+	}
+
+	fn lerp_to(&mut self, pos: Point, pos_z: f32) {
+		let t = self.pos_tween.value;
+		self.pos = self.pos.lerp(pos, t);
+		self.pos_z = self.pos_z.lerp(pos_z, t);
+	}
+
+	fn update(
+		&mut self,
+		ctx: &mut AppContext,
+		state: &mut CarouselState,
+		target_pos: Point,
+		target_z: f32,
+	) {
+		self.pos_tween.update(&ctx.time);
+
+		if self.is_dragging {
+			// Drag
+			self.lerp_to(ctx.input.mouse_pos, 0.0);
+
+			if ctx.input.left_just_released() {
+				self.end_drag(state);
+			}
+		} else {
+			self.lerp_to(target_pos, target_z);
+
+			if self.is_trying_to_drag {
+				self.pos = self.pos + ctx.input.mouse_drag_delta() / 4.0;
+			}
+		}
+
+		self.update_dragging(ctx, state);
+	}
+	fn update_dragging(&mut self, ctx: &mut AppContext, state: &mut CarouselState) {
+		// Whether the cartridge can be dragged & dropped
+		let accessible = self.pos_z < 0.3;
+
+		if self.is_trying_to_drag {
+			if !ctx.input.left_is_pressed() || state.is_dragging {
+				self.is_trying_to_drag = false;
+			}
+
+			if ctx.input.mouse_drag_delta().x.abs() > 40.0 {
+				self.start_drag(state);
+			}
+		}
+
+		if accessible && !state.is_dragging {
+			if self.sprite.is_hover(&mut ctx.input) {
+				self.anim.update(&ctx.time);
+
+				if ctx.input.left_just_pressed() {
+					self.is_trying_to_drag = true;
+				}
+			}
+		}
+
+		if self.is_dragging {
+			self.anim.update(&ctx.time);
 		}
 	}
 
@@ -44,21 +150,11 @@ impl Card {
 
 		// Draw sprite
 		let scale = 1.0 / (self.pos_z + 1.0);
-
-		if self.selected {
-			self.anim.update(&ctx.time);
-		}
-
-		let mut sprite = Sprite::from(&ctx.assets.cartridge)
-			.with_pos(self.pos)
-			.with_scale(scale)
-			.with_fg(Color::gray(light))
-			.with_anim(&self.anim);
-
-		sprite.pos.x -= sprite.size.x / 2.0;
-		sprite.pos.y -= sprite.size.y / 2.0;
-		sprite.pos = sprite.pos.floor();
-		sprite.draw(&mut ctx.painter, canvas);
+		self.sprite.size = ctx.assets.cartridge.size * scale;
+		self.sprite.pos = (self.pos - self.sprite.size / 2.0).floor();
+		self.sprite.foreground = Color::gray(light);
+		self.sprite.frame.x = self.anim.frame;
+		self.sprite.draw(&mut ctx.painter, canvas);
 
 		// Draw text
 		let mut text = Text::new(&ctx.assets.ibm_font).with_fg(Color::gray(light));
@@ -66,8 +162,8 @@ impl Card {
 		let bytes = self.info.title.as_bytes();
 		let width = bytes.len() as f32 * text.char_size().x;
 
-		text.pos.x = sprite.pos.x + sprite.size.x / 2.0 - width / 2.0;
-		text.pos.y = sprite.pos.y + sprite.size.y / 3.0;
+		text.pos.x = self.sprite.pos.x + self.sprite.size.x / 2.0 - width / 2.0;
+		text.pos.y = self.sprite.pos.y + self.sprite.size.y / 3.0;
 		text.pos = text.pos.floor();
 
 		text.draw_chars(&mut ctx.painter, canvas, bytes);
@@ -76,6 +172,8 @@ impl Card {
 
 /// Cartridges carousel
 pub struct Carousel {
+	pub state: CarouselState,
+
 	cards: Vec<Card>,
 	sorted_cards: Vec<usize>,
 
@@ -89,14 +187,16 @@ impl Carousel {
 	/// Angle between each cartridge sprite (in radians)
 	const ANGLE_BETWEEN: f32 = PI / (GAMES.len() as f32 / 2.0);
 
-	pub fn new() -> Self {
+	pub fn new(ctx: &mut AppContext) -> Self {
 		let mut cards = Vec::with_capacity(GAMES.len());
 
 		for info in GAMES {
-			cards.push(Card::new(info))
+			cards.push(Card::new(ctx, info))
 		}
 
 		Self {
+			state: CarouselState::default(),
+
 			sorted_cards: (0..cards.len()).collect(),
 			cards,
 
@@ -127,25 +227,24 @@ impl Carousel {
 			let idx = i as f32;
 			let a = self.angle + idx / COUNT * TAU + Self::ANGLE_BETWEEN / 2.0;
 
-			card.pos_z = (a.cos() + 1.0) / 2.0;
-			card.pos.x = Self::POS.x;
-			card.pos.y = Self::POS.y + a.sin() * Self::HEIGHT;
-			card.selected = false;
+			let x = Self::POS.x;
+			let y = Self::POS.y + a.sin() * Self::HEIGHT;
+			let z = (a.cos() + 1.0) / 2.0;
+
+			card.update(ctx, &mut self.state, (x, y).into(), z);
 		}
 
 		// Sort sprites only when angle was changed so that sprites Z pos changed significantly
-		if (self.angle - self.angle_before_sort).abs() >= Self::ANGLE_BETWEEN {
+		let angle_changed = (self.angle - self.angle_before_sort).abs() >= Self::ANGLE_BETWEEN;
+		if self.state.just_dragged || angle_changed {
 			self.sort_cards();
 			self.angle_before_sort = self.angle;
 		}
 
-		if let Some(i) = self.sorted_cards.last() {
-			let card = &mut self.cards[*i];
-			card.selected = true;
-		}
+		self.state.just_dragged = false;
 	}
 	fn update_velocity(&mut self, ctx: &mut AppContext) {
-		if ctx.input.left_is_pressed() {
+		if !self.state.is_dragging && ctx.input.left_is_pressed() {
 			self.velocity = -ctx.input.mouse_movement.y / CANVAS_HEIGHT * PI;
 		} else {
 			let snap_to_angle = self.angle.snap_round(Self::ANGLE_BETWEEN);
