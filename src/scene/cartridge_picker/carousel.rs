@@ -111,7 +111,7 @@ impl Card {
 			self.lerp_to(target_pos, target_z);
 
 			if self.is_trying_to_drag {
-				// Add small damping
+				// Add subtle damping
 				self.pos.x += ctx.input.mouse_drag_delta().x / 4.0;
 			}
 		}
