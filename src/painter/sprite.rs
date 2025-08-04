@@ -25,6 +25,8 @@ pub struct Sprite {
 	pub flip: Point<bool>,
 	/// Sprite rotation angle in degrees
 	pub angle: f32,
+	/// Rotation origin clamped to range `0.0..=1.0` and relative to sprite's top-left corner
+	pub origin: Point,
 	/// Crop sprite, clamped to range `0.0..=1.0`
 	/// Sprite will be cropped bottom-to-top, right-to-left
 	pub crop: Point,
@@ -45,6 +47,7 @@ impl Sprite {
 			frame: Point::default(),
 			flip: Point::default(),
 			angle: 0.0,
+			origin: Point::new(0.5, 0.5),
 			crop: (1.0, 1.0).into(),
 			opacity: 1.0,
 			foreground: Color::WHITE,
@@ -84,6 +87,10 @@ impl Sprite {
 	}
 	pub fn with_angle(mut self, angle: f32) -> Self {
 		self.angle = angle;
+		self
+	}
+	pub fn with_origin(mut self, origin: impl Into<Point>) -> Self {
+		self.origin = origin.into();
 		self
 	}
 	pub fn with_crop(mut self, crop: impl Into<Point>) -> Self {
@@ -188,7 +195,8 @@ impl Sprite {
 			let rads = self.angle.to_radians();
 			let cosine = rads.cos();
 			let sine = rads.sin();
-			let origin = pos + size / 2.0;
+			let origin_px = Point::new(size.x * self.origin.x, size.y * self.origin.y);
+			let origin = pos + origin_px;
 
 			// Rotate one vertex around `origin`
 			macro_rules! rotate {
