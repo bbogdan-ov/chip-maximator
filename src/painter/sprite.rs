@@ -11,6 +11,7 @@ use crate::{
 
 use super::{BatchFlag, Canvas, CanvasId, Painter, QUAD_FLIPPED_UV, texture::Texture};
 
+// FIXME: sprite struct is getting to big, need to do something with this
 /// Draw sprite descriptor
 /// Can be created on each frame draw call
 pub struct Sprite {
