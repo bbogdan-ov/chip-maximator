@@ -202,7 +202,7 @@ impl Scene {
 		self.update_emu(state);
 		self.update_heat(state);
 
-		// self.picker.update(ctx, state);
+		self.picker.update(ctx, state);
 
 		if cfg!(debug_assertions) && ctx.input.key_just_pressed(KeyCode::Enter) {
 			self.explode();
@@ -361,7 +361,7 @@ impl Scene {
 		self.draw_flip_trigger(ctx, state, canvas);
 		self.draw_tooltip(ctx, canvas);
 
-		// self.picker.draw(ctx, canvas);
+		self.picker.draw(ctx, canvas);
 	}
 
 	fn draw_tooltip(&self, ctx: &mut AppContext, canvas: CanvasId) {
