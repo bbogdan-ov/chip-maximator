@@ -28,6 +28,7 @@ pub struct Sprite {
 	pub foreground: Color,
 	pub background: Color,
 }
+#[allow(unused)]
 impl Sprite {
 	pub fn new(texture: Texture, size: impl Into<Point>) -> Self {
 		let size: Point = size.into();
