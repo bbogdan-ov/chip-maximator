@@ -299,7 +299,8 @@ impl Scene {
 		match self.cur_board_anim {
 			// Front board
 			BoardAnim::Front => {
-				self.front_board.draw(ctx, state, self.normal_layer);
+				self.front_board
+					.draw(ctx, state, self.normal_layer, &mut self.picker);
 				self.front_board.draw_displays(ctx, state, self.add_layer);
 			}
 			// Back board
@@ -482,7 +483,13 @@ impl FrontBoard {
 		self.valve.update(ctx, state);
 	}
 
-	fn draw(&mut self, ctx: &mut AppContext, state: &mut State, canvas: CanvasId) {
+	fn draw(
+		&mut self,
+		ctx: &mut AppContext,
+		state: &mut State,
+		canvas: CanvasId,
+		picker: &mut CartridgePicker,
+	) {
 		// Draw board
 		Sprite::from(&ctx.assets.front_board).draw(&mut ctx.painter, canvas);
 
@@ -496,10 +503,15 @@ impl FrontBoard {
 		self.timers.draw(ctx, state, canvas);
 		self.valve.draw(ctx, state, canvas);
 
-		Sprite::from(&ctx.assets.slot)
+		let slot = Sprite::from(&ctx.assets.slot)
 			.with_frame((1, 0))
-			.with_pos((534.0, 93.0))
-			.draw(&mut ctx.painter, canvas);
+			.with_pos((534.0, 93.0));
+
+		if slot.is_hover(&mut ctx.input) && ctx.input.left_just_pressed() {
+			picker.show();
+		}
+
+		slot.draw(&mut ctx.painter, canvas);
 	}
 	fn draw_displays(&mut self, ctx: &mut AppContext, state: &mut State, canvas: CanvasId) {
 		if !state.board.power {

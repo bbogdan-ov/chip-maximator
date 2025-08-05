@@ -2,6 +2,7 @@ mod carousel;
 mod speaker;
 
 use carousel::Carousel;
+use miniquad::KeyCode;
 use speaker::Speaker;
 
 use crate::{
@@ -43,6 +44,7 @@ impl PickerState {
 /// Cartridge picker
 pub struct CartridgePicker {
 	state: PickerState,
+	visible: bool,
 
 	carousel: Carousel,
 	speaker: Speaker,
@@ -53,10 +55,18 @@ impl CartridgePicker {
 	pub fn new(ctx: &mut AppContext) -> Self {
 		Self {
 			state: PickerState::default(),
+			visible: false,
 
 			carousel: Carousel::new(ctx),
 			speaker: Speaker::new(),
 		}
+	}
+
+	pub fn show(&mut self) {
+		self.visible = true;
+	}
+	pub fn hide(&mut self) {
+		self.visible = false;
 	}
 
 	fn equip(&mut self, state: &mut State, idx: usize) {
@@ -72,7 +82,16 @@ impl CartridgePicker {
 	}
 
 	pub fn update(&mut self, ctx: &mut AppContext, state: &mut State) {
+		if !self.visible {
+			return;
+		}
+
 		self.end_consume(ctx);
+
+		if ctx.input.key_just_pressed(KeyCode::Escape) {
+			self.hide();
+			return;
+		}
 
 		self.carousel.update(ctx, &mut self.state);
 		self.speaker.update(ctx, state);
@@ -87,6 +106,10 @@ impl CartridgePicker {
 	}
 
 	pub fn draw(&mut self, ctx: &mut AppContext, canvas: CanvasId) {
+		if !self.visible {
+			return;
+		}
+
 		self.end_consume(ctx);
 
 		// Draw darken rect
