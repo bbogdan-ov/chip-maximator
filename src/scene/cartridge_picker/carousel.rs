@@ -252,7 +252,7 @@ impl Carousel {
 		}
 	}
 	fn update_velocity(&mut self, ctx: &mut AppContext, state: &mut PickerState) {
-		let is_rotating = ctx.input.left_is_pressed() && ctx.input.mouse_pos.x < CANVAS_WIDTH / 2.0;
+		let is_rotating = ctx.input.left_is_pressed() && ctx.input.mouse_pos.x < CANVAS_WIDTH / 4.0;
 		if !state.is_dragging_any() && is_rotating {
 			self.velocity = -ctx.input.mouse_movement.y / CANVAS_HEIGHT * PI;
 		} else {
