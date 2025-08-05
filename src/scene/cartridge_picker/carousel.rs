@@ -12,10 +12,10 @@ use crate::{
 	util::{Anim, Easing, Tweenable},
 };
 
-use super::PickerState;
+use super::{CartridgePicker, PickerState};
 
 /// Cartridge card sprite
-struct Card {
+pub struct Card {
 	info: &'static GameInfo,
 	sprite: Sprite,
 
@@ -54,19 +54,26 @@ impl Card {
 			return;
 		}
 
-		let dur = Duration::from_millis(300);
-		self.pos_tween.play_from(0.0, 1.0, dur, Easing::Linear);
+		self.play_tween(300);
+
+		if state.picked_idx.is_some_and(|i| i == idx) {
+			state.picked_idx = None;
+		}
 
 		state.dragging_idx = Some(idx);
 		self.is_trying_to_drag = false;
 	}
 	fn drop(&mut self, state: &mut PickerState, idx: usize) {
-		let dur = Duration::from_millis(500);
-		self.pos_tween.play_from(0.0, 1.0, dur, Easing::InOutSine);
+		self.play_tween(500);
 
 		state.dragging_idx = None;
 		state.dropped_idx = Some(idx);
 		self.is_trying_to_drag = false;
+	}
+
+	pub fn play_tween(&mut self, millis: u64) {
+		let dur = Duration::from_millis(millis);
+		self.pos_tween.play_from(0.0, 1.0, dur, Easing::Linear);
 	}
 
 	fn lerp_to(&mut self, pos: Point, pos_z: f32) {
@@ -81,6 +88,7 @@ impl Card {
 		ctx: &mut AppContext,
 		state: &mut PickerState,
 		idx: usize,
+		picked: bool,
 		target_pos: Point,
 		target_z: f32,
 	) {
@@ -95,7 +103,12 @@ impl Card {
 				self.drop(state, idx);
 			}
 		} else {
-			self.lerp_to(target_pos, target_z);
+			if picked {
+				let pos = CartridgePicker::DROP_RECT.pos + CartridgePicker::DROP_RECT.size / 2.0;
+				self.lerp_to(pos, 0.0);
+			} else {
+				self.lerp_to(target_pos, target_z);
+			}
 
 			if self.is_trying_to_drag {
 				// Add subtle damping
@@ -177,7 +190,7 @@ impl Card {
 
 /// Cartridges carousel
 pub struct Carousel {
-	cards: Vec<Card>,
+	pub cards: Vec<Card>,
 	sorted_cards: Vec<usize>,
 
 	angle: f32,
@@ -228,7 +241,8 @@ impl Carousel {
 			let y = Self::POS.y + a.sin() * Self::HEIGHT;
 			let z = (a.cos() + 1.0) / 2.0;
 
-			card.update(ctx, state, idx, (x, y).into(), z);
+			let picked = state.picked_idx.is_some_and(|i| i == idx);
+			card.update(ctx, state, idx, picked, (x, y).into(), z);
 		}
 
 		// Sort sprites every 2nd frame to reduce overhead

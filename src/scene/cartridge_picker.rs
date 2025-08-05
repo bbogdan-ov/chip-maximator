@@ -14,6 +14,8 @@ use crate::{
 
 /// Cartridge picker state
 pub struct PickerState {
+	/// Picked cartridge index
+	pub picked_idx: Option<usize>,
 	/// Currently dragging cartridge index
 	pub dragging_idx: Option<usize>,
 	/// Dropped cartridge index
@@ -22,6 +24,7 @@ pub struct PickerState {
 impl Default for PickerState {
 	fn default() -> Self {
 		Self {
+			picked_idx: None,
 			dragging_idx: None,
 			dropped_idx: None,
 		}
@@ -55,6 +58,15 @@ impl CartridgePicker {
 		}
 	}
 
+	fn pick(&mut self, idx: usize) {
+		if let Some(prev_idx) = self.state.picked_idx {
+			// Smoothly move previously picked cartridge back to the carousel
+			self.carousel.cards[prev_idx].play_tween(500);
+		}
+
+		self.state.picked_idx = Some(idx);
+	}
+
 	pub fn update(&mut self, ctx: &mut AppContext, state: &State) {
 		self.end_consume(ctx);
 
@@ -63,7 +75,7 @@ impl CartridgePicker {
 
 		if let Some(card_idx) = self.state.dropped_idx.take() {
 			if Self::DROP_RECT.contains(&ctx.input.mouse_pos) {
-				println!("DROP {card_idx}");
+				self.pick(card_idx);
 			}
 		}
 
