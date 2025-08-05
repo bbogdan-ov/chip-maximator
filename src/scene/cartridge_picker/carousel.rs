@@ -56,8 +56,8 @@ impl Card {
 
 		self.play_tween(300);
 
-		if state.picked_idx.is_some_and(|i| i == idx) {
-			state.picked_idx = None;
+		if state.equiped_idx.is_some_and(|i| i == idx) {
+			state.equiped_idx = None;
 		}
 
 		state.dragging_idx = Some(idx);
@@ -88,7 +88,7 @@ impl Card {
 		ctx: &mut AppContext,
 		state: &mut PickerState,
 		idx: usize,
-		picked: bool,
+		equiped: bool,
 		target_pos: Point,
 		target_z: f32,
 	) {
@@ -103,7 +103,7 @@ impl Card {
 				self.drop(state, idx);
 			}
 		} else {
-			if picked {
+			if equiped {
 				let pos = CartridgePicker::DROP_RECT.pos + CartridgePicker::DROP_RECT.size / 2.0;
 				self.lerp_to(pos, 0.0);
 			} else {
@@ -241,8 +241,8 @@ impl Carousel {
 			let y = Self::POS.y + a.sin() * Self::HEIGHT;
 			let z = (a.cos() + 1.0) / 2.0;
 
-			let picked = state.picked_idx.is_some_and(|i| i == idx);
-			card.update(ctx, state, idx, picked, (x, y).into(), z);
+			let equiped = state.equiped_idx.is_some_and(|i| i == idx);
+			card.update(ctx, state, idx, equiped, (x, y).into(), z);
 		}
 
 		// Sort sprites every 2nd frame to reduce overhead
