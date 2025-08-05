@@ -6,6 +6,7 @@ use speaker::Speaker;
 
 use crate::{
 	app::{AppContext, CANVAS_HEIGHT, CANVAS_WIDTH},
+	games::GAMES,
 	input::InputConsume,
 	math::{Color, Rect},
 	painter::{CanvasId, Sprite},
@@ -58,16 +59,19 @@ impl CartridgePicker {
 		}
 	}
 
-	fn equip(&mut self, idx: usize) {
+	fn equip(&mut self, state: &mut State, idx: usize) {
 		if let Some(prev_idx) = self.state.equiped_idx {
 			// Smoothly move previously equiped cartridge back to the carousel
 			self.carousel.cards[prev_idx].play_tween(500);
 		}
 
 		self.state.equiped_idx = Some(idx);
+
+		let game = &GAMES[idx];
+		state.emu.load(game.bytes);
 	}
 
-	pub fn update(&mut self, ctx: &mut AppContext, state: &State) {
+	pub fn update(&mut self, ctx: &mut AppContext, state: &mut State) {
 		self.end_consume(ctx);
 
 		self.carousel.update(ctx, &mut self.state);
@@ -75,7 +79,7 @@ impl CartridgePicker {
 
 		if let Some(card_idx) = self.state.dropped_idx.take() {
 			if Self::DROP_RECT.contains(&ctx.input.mouse_pos) {
-				self.equip(card_idx);
+				self.equip(state, card_idx);
 			}
 		}
 
