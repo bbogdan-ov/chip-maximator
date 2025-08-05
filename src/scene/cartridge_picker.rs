@@ -7,18 +7,49 @@ use speaker::Speaker;
 use crate::{
 	app::{AppContext, CANVAS_HEIGHT, CANVAS_WIDTH},
 	input::InputConsume,
+	math::{Color, Rect},
 	painter::{CanvasId, Sprite},
 	state::State,
 };
 
+/// Cartridge picker state
+pub struct PickerState {
+	/// Currently dragging cartridge index
+	pub dragging_idx: Option<usize>,
+	/// Dropped cartridge index
+	pub dropped_idx: Option<usize>,
+}
+impl Default for PickerState {
+	fn default() -> Self {
+		Self {
+			dragging_idx: None,
+			dropped_idx: None,
+		}
+	}
+}
+impl PickerState {
+	pub fn is_dragging(&self, idx: usize) -> bool {
+		self.dragging_idx.is_some_and(|i| i == idx)
+	}
+	pub fn is_dragging_any(&self) -> bool {
+		self.dragging_idx.is_some()
+	}
+}
+
 /// Cartridge picker
 pub struct CartridgePicker {
+	state: PickerState,
+
 	carousel: Carousel,
 	speaker: Speaker,
 }
 impl CartridgePicker {
+	const DROP_RECT: Rect = Rect::new_xywh(180.0, 80.0, 180.0, 180.0);
+
 	pub fn new(ctx: &mut AppContext) -> Self {
 		Self {
+			state: PickerState::default(),
+
 			carousel: Carousel::new(ctx),
 			speaker: Speaker::new(),
 		}
@@ -27,8 +58,14 @@ impl CartridgePicker {
 	pub fn update(&mut self, ctx: &mut AppContext, state: &State) {
 		self.end_consume(ctx);
 
-		self.carousel.update(ctx);
+		self.carousel.update(ctx, &mut self.state);
 		self.speaker.update(ctx, state);
+
+		if let Some(card_idx) = self.state.dropped_idx.take() {
+			if Self::DROP_RECT.contains(&ctx.input.mouse_pos) {
+				println!("DROP {card_idx}");
+			}
+		}
 
 		self.begin_consume(ctx);
 	}
@@ -39,6 +76,12 @@ impl CartridgePicker {
 		// Draw darken rect
 		Sprite::new(ctx.painter.white_texture, (CANVAS_WIDTH, CANVAS_HEIGHT))
 			.with_fg((0.0, 0.0, 0.0))
+			.draw(&mut ctx.painter, canvas);
+
+		// TEMP: drop rect
+		Sprite::new(ctx.painter.white_texture, Self::DROP_RECT.size)
+			.with_pos(Self::DROP_RECT.pos)
+			.with_fg(Color::gray(0.5))
 			.draw(&mut ctx.painter, canvas);
 
 		self.speaker.draw(ctx, canvas);

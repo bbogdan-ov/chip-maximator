@@ -12,28 +12,7 @@ use crate::{
 	util::{Anim, Easing, Tweenable},
 };
 
-/// Carousel state
-pub struct CarouselState {
-	/// Currently dragging cartridge index
-	pub dragging_idx: Option<usize>,
-	pub just_dragged: bool,
-}
-impl Default for CarouselState {
-	fn default() -> Self {
-		Self {
-			dragging_idx: None,
-			just_dragged: false,
-		}
-	}
-}
-impl CarouselState {
-	pub fn is_dragging(&self, idx: usize) -> bool {
-		self.dragging_idx.is_some_and(|i| i == idx)
-	}
-	pub fn is_dragging_any(&self) -> bool {
-		self.dragging_idx.is_some()
-	}
-}
+use super::PickerState;
 
 /// Cartridge card sprite
 struct Card {
@@ -70,7 +49,7 @@ impl Card {
 		}
 	}
 
-	fn start_drag(&mut self, state: &mut CarouselState, idx: usize) {
+	fn grab(&mut self, state: &mut PickerState, idx: usize) {
 		if state.is_dragging_any() {
 			return;
 		}
@@ -79,14 +58,14 @@ impl Card {
 		self.pos_tween.play_from(0.0, 1.0, dur, Easing::Linear);
 
 		state.dragging_idx = Some(idx);
-		state.just_dragged = true;
 		self.is_trying_to_drag = false;
 	}
-	fn end_drag(&mut self, state: &mut CarouselState) {
+	fn drop(&mut self, state: &mut PickerState, idx: usize) {
 		let dur = Duration::from_millis(500);
 		self.pos_tween.play_from(0.0, 1.0, dur, Easing::InOutSine);
 
 		state.dragging_idx = None;
+		state.dropped_idx = Some(idx);
 		self.is_trying_to_drag = false;
 	}
 
@@ -100,7 +79,7 @@ impl Card {
 	fn update(
 		&mut self,
 		ctx: &mut AppContext,
-		state: &mut CarouselState,
+		state: &mut PickerState,
 		idx: usize,
 		target_pos: Point,
 		target_z: f32,
@@ -113,7 +92,7 @@ impl Card {
 			self.lerp_to((pos.x, pos.y + self.sprite.size.y / 3.0).into(), 0.0);
 
 			if ctx.input.left_just_released() {
-				self.end_drag(state);
+				self.drop(state, idx);
 			}
 		} else {
 			self.lerp_to(target_pos, target_z);
@@ -127,7 +106,7 @@ impl Card {
 		self.update_velocity();
 		self.update_dragging(ctx, state, idx);
 	}
-	fn update_dragging(&mut self, ctx: &mut AppContext, state: &mut CarouselState, idx: usize) {
+	fn update_dragging(&mut self, ctx: &mut AppContext, state: &mut PickerState, idx: usize) {
 		// Whether the cartridge can be dragged & dropped
 		let accessible = self.pos_z < 0.3;
 
@@ -137,7 +116,7 @@ impl Card {
 			}
 
 			if ctx.input.mouse_drag_delta().x.abs() > 40.0 {
-				self.start_drag(state, idx);
+				self.grab(state, idx);
 			}
 		}
 
@@ -198,8 +177,6 @@ impl Card {
 
 /// Cartridges carousel
 pub struct Carousel {
-	pub state: CarouselState,
-
 	cards: Vec<Card>,
 	sorted_cards: Vec<usize>,
 
@@ -220,8 +197,6 @@ impl Carousel {
 		}
 
 		Self {
-			state: CarouselState::default(),
-
 			sorted_cards: (0..cards.len()).collect(),
 			cards,
 
@@ -240,10 +215,10 @@ impl Carousel {
 		});
 	}
 
-	pub fn update(&mut self, ctx: &mut AppContext) {
+	pub fn update(&mut self, ctx: &mut AppContext, state: &mut PickerState) {
 		const COUNT: f32 = GAMES.len() as f32;
 
-		self.update_velocity(ctx);
+		self.update_velocity(ctx, state);
 
 		// Place cartridge sprites in circle
 		for (idx, card) in self.cards.iter_mut().enumerate() {
@@ -253,7 +228,7 @@ impl Carousel {
 			let y = Self::POS.y + a.sin() * Self::HEIGHT;
 			let z = (a.cos() + 1.0) / 2.0;
 
-			card.update(ctx, &mut self.state, idx, (x, y).into(), z);
+			card.update(ctx, state, idx, (x, y).into(), z);
 		}
 
 		// Sort sprites every 2nd frame to reduce overhead
@@ -261,12 +236,10 @@ impl Carousel {
 		if ctx.time.elapsed % 2 == 0 {
 			self.sort_cards();
 		}
-
-		self.state.just_dragged = false;
 	}
-	fn update_velocity(&mut self, ctx: &mut AppContext) {
+	fn update_velocity(&mut self, ctx: &mut AppContext, state: &mut PickerState) {
 		let is_rotating = ctx.input.left_is_pressed() && ctx.input.mouse_pos.x < CANVAS_WIDTH / 2.0;
-		if !self.state.is_dragging_any() && is_rotating {
+		if !state.is_dragging_any() && is_rotating {
 			self.velocity = -ctx.input.mouse_movement.y / CANVAS_HEIGHT * PI;
 		} else {
 			let snap_to_angle = self.angle.snap_round(Self::ANGLE_BETWEEN);
