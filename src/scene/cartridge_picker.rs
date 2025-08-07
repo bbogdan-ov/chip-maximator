@@ -1,7 +1,9 @@
 mod carousel;
+mod description;
 mod speaker;
 
 use carousel::Carousel;
+use description::Description;
 use miniquad::KeyCode;
 use speaker::Speaker;
 
@@ -48,6 +50,7 @@ pub struct CartridgePicker {
 
 	carousel: Carousel,
 	speaker: Speaker,
+	desc: Description,
 }
 impl CartridgePicker {
 	const DROP_RECT: Rect = Rect::new_xywh(180.0, 80.0, 180.0, 180.0);
@@ -59,6 +62,7 @@ impl CartridgePicker {
 
 			carousel: Carousel::new(ctx),
 			speaker: Speaker::new(),
+			desc: Description::new(),
 		}
 	}
 
@@ -124,6 +128,7 @@ impl CartridgePicker {
 			.draw(&mut ctx.painter, canvas);
 
 		self.speaker.draw(ctx, canvas);
+		self.desc.draw(ctx, canvas);
 		self.carousel.draw(ctx, canvas);
 
 		self.begin_consume(ctx);

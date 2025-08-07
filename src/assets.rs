@@ -195,6 +195,8 @@ assets! {
 		speaker => "speaker", 134, 210, 15, 1,
 		speaker_window => "speaker-window", 310, 310, 1, 1,
 		speaker_button => "speaker-button", 24, 16, 2, 2,
+		desc_display => "desc-display", 460, 300, 1, 1,
+		desc_display_tabs => "desc-display-tabs", 160, 20, 1, 2,
 
 		explosion => "explosion", 175, 175, 16, 1,
 
