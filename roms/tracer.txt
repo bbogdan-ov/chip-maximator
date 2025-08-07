@@ -1,8 +1,11 @@
-Move: W 
-     ASD
+WASD - movement
 
 TODO:
 
-Survive as much as you can!!!
+Survive as much as
+you can!!!
+
+And do not collide
+with yourself
 
 by bogdanov

@@ -1,8 +1,11 @@
 use crate::{
 	app::{AppContext, CANVAS_HEIGHT, CANVAS_WIDTH},
-	math::Point,
-	painter::{CanvasId, Sprite},
+	games::GAMES,
+	math::{Color, Point, Rect},
+	painter::{CanvasId, Sprite, Text},
 };
+
+use super::PickerState;
 
 /// Cartridge description display
 pub struct Description {
@@ -16,11 +19,27 @@ impl Description {
 		Self { is_code_tab: false }
 	}
 
-	pub fn draw(&mut self, ctx: &mut AppContext, canvas: CanvasId) {
+	pub fn draw(&mut self, ctx: &mut AppContext, canvas: CanvasId, state: &PickerState) {
 		// Draw window
 		Sprite::from(&ctx.assets.desc_display)
 			.with_pos(Self::POS)
 			.draw(&mut ctx.painter, canvas);
+
+		// Draw text
+		if let Some(idx) = state.equiped_idx {
+			let clip = Rect::new_xywh(Self::POS.x + 148.0, Self::POS.y + 28.0, 292.0, 256.0);
+			ctx.painter.set_clip(Some(clip));
+
+			let game = &GAMES[idx];
+			let pos = Self::POS + Point::new(162.0, 42.0);
+			Text::new(&ctx.assets.serif_font)
+				.with_pos(pos)
+				.with_font_size(0.7)
+				.with_bg(Color::TRANSPARENT)
+				.draw_str(&mut ctx.painter, canvas, game.desc);
+
+			ctx.painter.set_clip(None);
+		}
 
 		// Draw tabs
 		let pos = Self::POS + Point::new(144.0, 8.0);
