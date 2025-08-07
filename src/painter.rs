@@ -19,7 +19,7 @@ use miniquad::{raw_gl::*, window};
 
 use binding::{Binding, BindingId, Index, VertAttr, Vertex};
 
-use crate::math::{Color, Point};
+use crate::math::{Color, Point, Rect};
 
 #[rustfmt::skip]
 pub const QUAD_UV: [Point; 4] = [
@@ -99,6 +99,9 @@ pub struct Painter {
 	/// Current batch canvas
 	batch_canvas: Option<CanvasId>,
 	batch_canvas_changed: bool,
+	batch_update_scissor: bool,
+	/// Current batch clip rect
+	batch_clip: Option<Rect>,
 	/// Current batch textures
 	batch_textures: Option<(Texture, Texture)>,
 	/// Current batch uniforms
@@ -120,7 +123,6 @@ impl Painter {
 		let mut context = PainterContext::default();
 
 		unsafe {
-			glEnable(GL_SCISSOR_TEST);
 			glEnable(GL_BLEND);
 
 			glBlendEquationSeparate(GL_FUNC_ADD, GL_FUNC_ADD);
@@ -163,6 +165,8 @@ impl Painter {
 
 			batch_canvas: None,
 			batch_canvas_changed: true,
+			batch_update_scissor: false,
+			batch_clip: None,
 			batch_textures: None,
 			batch_uniforms: BatchUniforms::default(),
 			batch_shader,
@@ -204,7 +208,15 @@ impl Painter {
 
 		unsafe {
 			glViewport(0, 0, size.x as i32, size.y as i32);
-			glScissor(0, 0, size.x as i32, size.y as i32);
+			match self.batch_clip {
+				Some(rect) => glScissor(
+					rect.pos.x as i32,
+					rect.pos.y as i32,
+					rect.size.x as i32,
+					rect.size.y as i32,
+				),
+				None => glScissor(0, 0, size.x as i32, size.y as i32),
+			}
 
 			glClearColor(color.red, color.green, color.blue, color.alpha);
 			glClear(GL_COLOR_BUFFER_BIT);
@@ -230,7 +242,6 @@ impl Painter {
 
 			unsafe {
 				glViewport(0, 0, view_size.x as i32, view_size.y as i32);
-				glScissor(0, 0, view_size.x as i32, view_size.y as i32);
 
 				if clear {
 					glClearColor(color.red, color.green, color.blue, color.alpha);
@@ -239,6 +250,24 @@ impl Painter {
 			}
 
 			self.batch_canvas_changed = false;
+		}
+		if self.batch_update_scissor {
+			unsafe {
+				if let Some(rect) = self.batch_clip {
+					glEnable(GL_SCISSOR_TEST);
+
+					glScissor(
+						rect.pos.x as i32,
+						rect.pos.y as i32,
+						rect.size.x as i32,
+						rect.size.y as i32,
+					);
+				} else {
+					glDisable(GL_SCISSOR_TEST);
+				}
+			}
+
+			self.batch_update_scissor = false;
 		}
 
 		// Update buffers
@@ -294,6 +323,15 @@ impl Painter {
 		self.batch_uniforms = BatchUniforms::default();
 	}
 
+	/// Set current batch clip rect
+	pub fn set_clip(&mut self, rect: Option<Rect>) {
+		if self.batch_clip != rect {
+			self.draw();
+			self.batch_clip = rect;
+			self.batch_update_scissor = true;
+		}
+	}
+
 	/// Set current batch uniforms
 	pub fn set_uniforms(
 		&mut self,
@@ -309,6 +347,7 @@ impl Painter {
 
 		if canvas_changed {
 			self.batch_canvas_changed = true;
+			self.batch_update_scissor = true;
 		}
 
 		self.batch_canvas = canvas;
