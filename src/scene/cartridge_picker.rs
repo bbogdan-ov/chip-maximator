@@ -62,7 +62,7 @@ impl CartridgePicker {
 
 			carousel: Carousel::new(ctx),
 			speaker: Speaker::new(),
-			desc: Description::new(),
+			desc: Description::new(ctx),
 		}
 	}
 
@@ -109,6 +109,13 @@ impl CartridgePicker {
 		self.begin_consume(ctx);
 	}
 
+	pub fn offscreen_draw(&mut self, ctx: &mut AppContext) {
+		if !self.visible {
+			return;
+		}
+
+		self.desc.offscreen_draw(ctx, &self.state);
+	}
 	pub fn draw(&mut self, ctx: &mut AppContext, canvas: CanvasId) {
 		if !self.visible {
 			return;
@@ -128,7 +135,7 @@ impl CartridgePicker {
 			.draw(&mut ctx.painter, canvas);
 
 		self.speaker.draw(ctx, canvas);
-		self.desc.draw(ctx, canvas, &self.state);
+		self.desc.draw(ctx, canvas);
 		self.carousel.draw(ctx, canvas);
 
 		self.begin_consume(ctx);
