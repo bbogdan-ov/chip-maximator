@@ -245,9 +245,9 @@ impl Carousel {
 			card.update(ctx, state, idx, equiped, (x, y).into(), z);
 		}
 
-		// Sort sprites every 2nd frame to reduce overhead
+		// Sort sprites every 4th frame to reduce overhead
 		// This solution is kinda dumb, but it seems to work ok
-		if ctx.time.elapsed % 2 == 0 {
+		if ctx.time.elapsed % 4 == 0 {
 			self.sort_cards();
 		}
 	}
