@@ -195,6 +195,9 @@ pub struct Carousel {
 
 	angle: f32,
 	velocity: f32,
+
+	sound_radians: f32,
+	sounds_played: u8,
 }
 impl Carousel {
 	const HEIGHT: f32 = 300.0;
@@ -215,6 +218,9 @@ impl Carousel {
 
 			angle: 0.0,
 			velocity: 0.0,
+
+			sound_radians: 0.0,
+			sounds_played: 0,
 		}
 	}
 
@@ -232,6 +238,16 @@ impl Carousel {
 		const COUNT: f32 = GAMES.len() as f32;
 
 		self.update_velocity(ctx, state);
+
+		if self.sounds_played > 0 {
+			self.sounds_played -= 1;
+		}
+		if self.sounds_played < 2 && self.sound_radians.abs() >= Self::ANGLE_BETWEEN / 2.0 {
+			// TODO: may we should use a different sound for the carousel rotation
+			ctx.audio.play(ctx.assets.rotation_sound);
+			self.sounds_played += 3;
+			self.sound_radians = 0.0;
+		}
 
 		// Place cartridge sprites in circle
 		for (idx, card) in self.cards.iter_mut().enumerate() {
@@ -266,6 +282,7 @@ impl Carousel {
 		}
 
 		self.angle += self.velocity;
+		self.sound_radians += self.velocity;
 		self.angle %= TAU;
 	}
 
