@@ -246,7 +246,7 @@ impl Carousel {
 		}
 
 		// Sort sprites every 2nd frame to reduce overhead
-		// This solution is kinda bad, but it seems work
+		// This solution is kinda dumb, but it seems to work ok
 		if ctx.time.elapsed % 2 == 0 {
 			self.sort_cards();
 		}
