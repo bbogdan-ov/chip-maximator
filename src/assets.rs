@@ -222,6 +222,10 @@ assets! {
 		fan_sound => "fan",
 		fall_sound => "fall",
 		whistle_sound => "whistle",
+		grab_1_sound => "grab-1",
+		grab_2_sound => "grab-2",
+		grab_3_sound => "grab-3",
+		grab_4_sound => "grab-4",
 
 		sound_0 => "0",
 		sound_1 => "1",

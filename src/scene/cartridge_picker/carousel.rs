@@ -49,7 +49,7 @@ impl Card {
 		}
 	}
 
-	fn grab(&mut self, state: &mut PickerState, idx: usize) {
+	fn grab(&mut self, ctx: &mut AppContext, state: &mut PickerState, idx: usize) {
 		if state.is_dragging_any() {
 			return;
 		}
@@ -62,13 +62,37 @@ impl Card {
 
 		state.dragging_idx = Some(idx);
 		self.is_trying_to_drag = false;
+
+		ctx.audio.play_random(
+			&ctx.time,
+			&[
+				ctx.assets.grab_1_sound,
+				ctx.assets.grab_2_sound,
+				ctx.assets.grab_3_sound,
+				ctx.assets.grab_4_sound,
+			],
+		);
 	}
-	fn drop(&mut self, state: &mut PickerState, idx: usize) {
+	fn drop(&mut self, ctx: &mut AppContext, state: &mut PickerState, idx: usize) {
+		if !state.is_dragging_any() {
+			return;
+		}
+
 		self.play_tween(500);
 
 		state.dragging_idx = None;
 		state.dropped_idx = Some(idx);
 		self.is_trying_to_drag = false;
+
+		ctx.audio.play_random(
+			&ctx.time,
+			&[
+				ctx.assets.grab_1_sound,
+				ctx.assets.grab_2_sound,
+				ctx.assets.grab_3_sound,
+				ctx.assets.grab_4_sound,
+			],
+		);
 	}
 
 	pub fn play_tween(&mut self, millis: u64) {
@@ -100,7 +124,7 @@ impl Card {
 			self.lerp_to((pos.x, pos.y + self.sprite.size.y / 3.0).into(), 0.0);
 
 			if ctx.input.left_just_released() {
-				self.drop(state, idx);
+				self.drop(ctx, state, idx);
 			}
 		} else {
 			if equiped {
@@ -129,7 +153,7 @@ impl Card {
 			}
 
 			if ctx.input.mouse_drag_delta().x.abs() > 40.0 {
-				self.grab(state, idx);
+				self.grab(ctx, state, idx);
 			}
 		}
 
