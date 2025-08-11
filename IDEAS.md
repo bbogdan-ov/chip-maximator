@@ -5,3 +5,5 @@
 
 - [ ] **Human-readable cartridge view**. It would be cool to add ability to view
   the cartridge data as human-readable "assembly" code
+
+- [ ] **Screen saver on back board titles display**
