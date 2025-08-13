@@ -81,6 +81,7 @@ pub struct Emu {
 	pub speed: f32,
 	/// Whether any kind of error has occurred
 	pub error: bool,
+	// TODO: not the most logic place to store this field in
 	/// CPU heat level in range `0.0..=1.0`
 	pub heat: f32,
 }
