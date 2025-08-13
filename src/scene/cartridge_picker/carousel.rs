@@ -157,13 +157,11 @@ impl Card {
 			}
 		}
 
-		if accessible && !state.is_dragging_any() {
-			if self.sprite.is_hover(&mut ctx.input) {
-				self.anim.update(&ctx.time);
+		if accessible && !state.is_dragging_any() && self.sprite.is_hover(&mut ctx.input) {
+			self.anim.update(&ctx.time);
 
-				if ctx.input.left_just_pressed() {
-					self.is_trying_to_drag = true;
-				}
+			if ctx.input.left_just_pressed() {
+				self.is_trying_to_drag = true;
 			}
 		}
 	}

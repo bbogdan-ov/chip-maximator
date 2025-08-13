@@ -355,6 +355,7 @@ impl Painter {
 		self.batch_uniforms = uniforms;
 	}
 
+	#[allow(clippy::identity_op)]
 	pub fn push_verts(&mut self, verts: [Point; 4], uv: [Point; 4], opacity: f32) {
 		let quads = self.batch_quads;
 		let vertices = &mut self.batch_vertices;

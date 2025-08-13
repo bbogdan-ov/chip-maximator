@@ -17,6 +17,7 @@ use crate::{
 };
 
 /// Cartridge picker state
+#[derive(Default)]
 pub struct PickerState {
 	/// Equiped cartridge index
 	pub equiped_idx: Option<usize>,
@@ -24,15 +25,6 @@ pub struct PickerState {
 	pub dragging_idx: Option<usize>,
 	/// Dropped cartridge index
 	pub dropped_idx: Option<usize>,
-}
-impl Default for PickerState {
-	fn default() -> Self {
-		Self {
-			equiped_idx: None,
-			dragging_idx: None,
-			dropped_idx: None,
-		}
-	}
 }
 impl PickerState {
 	pub fn is_dragging(&self, idx: usize) -> bool {

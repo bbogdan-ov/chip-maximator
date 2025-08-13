@@ -39,14 +39,10 @@ impl State {
 }
 
 /// Board state
+#[derive(Default)]
 pub struct BoardState {
 	/// Whether the board is currently turned on
 	pub power: bool,
-}
-impl Default for BoardState {
-	fn default() -> Self {
-		Self { power: false }
-	}
 }
 impl BoardState {
 	/// Set `power` and play the switch sound

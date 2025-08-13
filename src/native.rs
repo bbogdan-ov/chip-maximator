@@ -61,7 +61,7 @@ pub fn now_millis() -> i32 {
 			.unwrap_or_default()
 			.as_millis();
 
-		(now % std::i32::MAX as u128) as i32
+		(now % i32::MAX as u128) as i32
 	}
 
 	#[cfg(target_arch = "wasm32")]
