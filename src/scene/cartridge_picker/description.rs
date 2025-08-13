@@ -1,8 +1,8 @@
 use crate::{
 	app::{AppContext, CANVAS_HEIGHT, CANVAS_WIDTH},
 	games::GAMES,
-	math::{Color, Point, Rect},
-	painter::{BlendMode, CanvasId, Merge, Sprite, Text},
+	math::{Color, Point},
+	painter::{CanvasId, Sprite, Text},
 };
 
 use super::PickerState;
