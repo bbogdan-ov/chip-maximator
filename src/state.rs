@@ -5,6 +5,7 @@ use crate::{
 };
 
 /// State
+#[derive(Default)]
 pub struct State {
 	pub emu: Emu,
 	pub board: BoardState,
@@ -12,15 +13,6 @@ pub struct State {
 	pub leds: InstuctionLedsState,
 }
 impl State {
-	pub fn new() -> Self {
-		Self {
-			emu: Emu::default(),
-			board: BoardState::default(),
-			valve: ValveState::default(),
-			leds: InstuctionLedsState::default(),
-		}
-	}
-
 	pub fn reset(&mut self) {
 		// A cool sword
 		// ===):::::::::::::::>

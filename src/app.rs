@@ -118,7 +118,7 @@ impl App {
 			audio: Audio::new(cli.muted),
 		};
 
-		let mut state = State::new();
+		let mut state = State::default();
 		if cfg!(debug_assertions) {
 			state.board.power = true;
 		}
