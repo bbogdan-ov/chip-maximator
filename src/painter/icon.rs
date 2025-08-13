@@ -29,6 +29,7 @@ impl IconKind {
 pub struct Icon {
 	inner: Sprite,
 }
+#[allow(unused)]
 impl Icon {
 	pub fn new(assets: &Assets, kind: IconKind) -> Self {
 		let mut inner = Sprite::from(&assets.icons);
