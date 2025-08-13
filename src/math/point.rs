@@ -98,3 +98,13 @@ impl<T: Copy + Div<Output = T>> Div<T> for Point<T> {
 		}
 	}
 }
+impl<T: Copy + Div<Output = T>> Div<Point<T>> for Point<T> {
+	type Output = Point<T>;
+
+	fn div(self, rhs: Point<T>) -> Self::Output {
+		Self {
+			x: self.x / rhs.x,
+			y: self.y / rhs.y,
+		}
+	}
+}

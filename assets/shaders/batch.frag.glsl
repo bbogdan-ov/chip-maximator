@@ -4,6 +4,7 @@ precision mediump float;
 #define FLAG_SPRITE 1
 #define FLAG_TEXT 2
 #define FLAG_MERGE 4
+#define FLAG_PICKER_BG 8
 
 #define HAS_FLAG(FLAG) ((u_flags & FLAG) != 0)
 
@@ -26,6 +27,7 @@ uniform vec3 u_foreground;
 uniform vec4 u_background;
 uniform int u_blend_mode;
 uniform float u_factor;
+uniform vec2 u_mouse_pos;
 
 out vec4 out_color;
 
@@ -51,6 +53,62 @@ vec3 blend(vec4 fg, vec4 bg) {
 		);
 
 	return vec3(1.0, 0.0, 1.0);
+}
+
+// TODO: move picker background rending into a separate file
+
+// Thanks to https://github.com/hughsk/glsl-dither
+float dither4x4(vec2 position, float brightness) {
+	int x = int(mod(position.x, 4.0));
+	int y = int(mod(position.y, 4.0));
+	int index = x + y * 4;
+	float limit = 0.0;
+
+	if (x < 8) {
+		if (index == 0) limit = 0.0625;
+		if (index == 1) limit = 0.5625;
+		if (index == 2) limit = 0.1875;
+		if (index == 3) limit = 0.6875;
+		if (index == 4) limit = 0.8125;
+		if (index == 5) limit = 0.3125;
+		if (index == 6) limit = 0.9375;
+		if (index == 7) limit = 0.4375;
+		if (index == 8) limit = 0.25;
+		if (index == 9) limit = 0.75;
+		if (index == 10) limit = 0.125;
+		if (index == 11) limit = 0.625;
+		if (index == 12) limit = 1.0;
+		if (index == 13) limit = 0.5;
+		if (index == 14) limit = 0.875;
+		if (index == 15) limit = 0.375;
+	}
+
+	return brightness < limit ? 0.0 : 1.0;
+}
+
+// Thanks to https://iquilezles.org for these funky SDF functions
+float smin(float a, float b, float k) {
+	k *= 6.0;
+	float h = max( k-abs(a-b), 0.0 )/k;
+	return min(a,b) - h*h*h*k*(1.0/6.0);
+}
+float circle(vec2 p, float r) {
+	return length(p) - r;
+}
+
+vec4 render_picker_bg() {
+	vec2 mouse = vec2(u_mouse_pos.x, 1.0 - u_mouse_pos.y);
+
+	float f = mix(1.0, circle(uv - vec2(mouse.x * 0.4, mouse.y), 0.04) * 1.5, u_factor);
+	float f2 = smoothstep(0.18, 0.6, uv.x);
+
+	float result = 0.0;
+	result = smin(f, f2, 0.2);
+	result = smoothstep(0.0, 0.5, result);
+
+	float a = dither4x4(gl_FragCoord.xy, result);
+	vec4 color = texture(u_texture1, vec2(uv.x, 1.0 - uv.y));
+	return vec4(color.rgb * a, 1.0);
 }
 
 vec4 frag() {
@@ -82,6 +140,10 @@ vec4 frag() {
 		vec4 fg_color = texture(u_texture2, uv);
 		vec3 rgb = blend(bg_color, fg_color);
 		return mix(bg_color, vec4(rgb, max(bg_color.a, fg_color.a)), fg_color.a * u_factor);
+	}
+
+	if (HAS_FLAG(FLAG_PICKER_BG)) {
+		return render_picker_bg();
 	}
 
 	// Purple color if something went wrong

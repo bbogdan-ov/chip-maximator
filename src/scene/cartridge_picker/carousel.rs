@@ -19,7 +19,7 @@ pub struct Card {
 	info: &'static GameInfo,
 	sprite: Sprite,
 
-	pos: Point,
+	pub pos: Point,
 	/// Position of the previous frame
 	prev_pos: Point,
 	pos_z: f32,
@@ -61,6 +61,7 @@ impl Card {
 		}
 
 		state.dragging_idx = Some(idx);
+		state.just_grabbed = true;
 		self.is_trying_to_drag = false;
 
 		ctx.audio.play_random(
@@ -82,6 +83,7 @@ impl Card {
 
 		state.dragging_idx = None;
 		state.dropped_idx = Some(idx);
+		state.just_dropped = true;
 		self.is_trying_to_drag = false;
 
 		ctx.audio.play_random(

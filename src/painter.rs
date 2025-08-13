@@ -38,14 +38,16 @@ pub const QUAD_FLIPPED_UV: [Point; 4] = [
 
 #[derive(Debug, PartialEq)]
 pub struct BatchUniforms {
-	flags: BatchFlag,
+	pub flags: BatchFlag,
 	/// Foreground tint color
-	foreground: Color,
+	pub foreground: Color,
 	/// Background color
-	background: Color,
+	pub background: Color,
 
-	blend_mode: BlendMode,
-	factor: f32,
+	pub blend_mode: BlendMode,
+	pub factor: f32,
+	/// Mouse position clamped to 0.0..=1.0
+	pub mouse_pos: Point,
 }
 impl Default for BatchUniforms {
 	fn default() -> Self {
@@ -56,6 +58,7 @@ impl Default for BatchUniforms {
 
 			blend_mode: BlendMode::Normal,
 			factor: 1.0,
+			mouse_pos: Point::default(),
 		}
 	}
 }
@@ -66,6 +69,8 @@ bitflags::bitflags! {
 		const SPRITE = 1 << 0;
 		const TEXT = 1 << 1;
 		const MERGE = 1 << 2;
+
+		const PICKER_BG = 1 << 3;
 	}
 }
 impl Default for BatchFlag {
@@ -146,6 +151,7 @@ impl Painter {
 				"u_background",
 				"u_blend_mode",
 				"u_factor",
+				"u_mouse_pos",
 			],
 		)?;
 		let batch_binding = context.new_bindings(
@@ -294,6 +300,7 @@ impl Painter {
 			"u_background" => uni.background.into_float4(),
 			"u_blend_mode" => Uniform::Int1(uni.blend_mode.into()),
 			"u_factor" => uni.factor,
+			"u_mouse_pos" => uni.mouse_pos.into_tuple(),
 		}
 
 		// Apply textures
