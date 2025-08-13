@@ -96,10 +96,18 @@ float circle(vec2 p, float r) {
 	return length(p) - r;
 }
 
+// Thanks to https://math.stackexchange.com/a/2323106
+float never_1(float x) {
+	#define E 2.71828
+
+	return 1.0 - pow(E, -x);
+}
+
 vec4 render_picker_bg() {
 	vec2 mouse = vec2(u_mouse_pos.x, 1.0 - u_mouse_pos.y);
 
-	float f = mix(1.0, circle(uv - vec2(mouse.x * 0.4, mouse.y), 0.04) * 1.5, u_factor);
+	float x = never_1(mouse.x) * 0.5;
+	float f = mix(1.0, circle(uv - vec2(x, mouse.y), 0.04) * 1.5, u_factor);
 	float f2 = smoothstep(0.18, 0.6, uv.x);
 
 	float result = 0.0;
