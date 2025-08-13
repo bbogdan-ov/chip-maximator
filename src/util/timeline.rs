@@ -37,7 +37,6 @@ impl TweenPlay {
 #[derive(Debug, Clone, Copy)]
 pub enum TweenAction {
 	Play(TweenPlay),
-	Set(f32),
 }
 impl From<TweenPlay> for TweenAction {
 	fn from(value: TweenPlay) -> Self {
@@ -155,9 +154,6 @@ impl<A: Copy> Timeline<A> {
 					TweenAction::Play(play) => {
 						borrowed.play(play.end, play.duration, play.easing);
 						self.cur_tween = Some(Rc::clone(&tween));
-					}
-					TweenAction::Set(value) => {
-						borrowed.value = value;
 					}
 				}
 
