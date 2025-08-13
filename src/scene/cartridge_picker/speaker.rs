@@ -192,7 +192,10 @@ impl Speaker {
 					button.frame.y = 1;
 				}
 
-				clicked = ctx.input.left_just_pressed();
+				if ctx.input.left_just_pressed() {
+					clicked = true;
+					ctx.audio.play(ctx.assets.button_press_sound);
+				}
 			}
 
 			button.draw(&mut ctx.painter, canvas);
