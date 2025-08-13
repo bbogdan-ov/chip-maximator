@@ -4,13 +4,6 @@ use crate::{
 	util::{Tweenable, TweenableRef},
 };
 
-/// Board side
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum BoardSide {
-	Front,
-	Back,
-}
-
 /// State
 pub struct State {
 	pub emu: Emu,
@@ -49,14 +42,10 @@ impl State {
 pub struct BoardState {
 	/// Whether the board is currently turned on
 	pub power: bool,
-	pub side: BoardSide,
 }
 impl Default for BoardState {
 	fn default() -> Self {
-		Self {
-			power: false,
-			side: BoardSide::Front,
-		}
+		Self { power: false }
 	}
 }
 impl BoardState {

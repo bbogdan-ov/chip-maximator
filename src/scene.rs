@@ -35,7 +35,7 @@ use crate::{
 	input::InputConsume,
 	math::{Color, Rect},
 	painter::{BlendMode, CanvasId, Icon, IconKind, Merge, Sprite, Text},
-	state::{BoardSide, State},
+	state::State,
 	util::{Anim, AnimRef, AnimWait, Easing, Timeline, TweenPlay},
 };
 
@@ -149,10 +149,7 @@ impl Scene {
 			picker: CartridgePicker::new(ctx),
 
 			was_power: state.board.power,
-			cur_board_anim: match state.board.side {
-				BoardSide::Front => BoardAnim::Front,
-				BoardSide::Back => BoardAnim::Back,
-			},
+			cur_board_anim: BoardAnim::Front,
 
 			flip_timeline,
 			explode_timeline,
