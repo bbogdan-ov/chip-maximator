@@ -57,7 +57,7 @@ impl Card {
 		self.play_tween(300);
 
 		if state.equiped_idx.is_some_and(|i| i == idx) {
-			state.equiped_idx = None;
+			state.unequip();
 		}
 
 		state.dragging_idx = Some(idx);

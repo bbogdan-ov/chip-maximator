@@ -28,10 +28,24 @@ pub struct PickerState {
 	pub dragging_idx: Option<usize>,
 	/// Dropped cartridge index
 	pub dropped_idx: Option<usize>,
+	/// Unequipped cartridge index
+	pub unequipped_idx: Option<usize>,
+
 	pub just_grabbed: bool,
 	pub just_dropped: bool,
+	pub just_unequipped: bool,
 }
 impl PickerState {
+	pub fn equip(&mut self, idx: usize) {
+		self.unequip();
+		self.equiped_idx = Some(idx);
+	}
+	pub fn unequip(&mut self) {
+		self.unequipped_idx = self.equiped_idx;
+		self.equiped_idx = None;
+		self.just_unequipped = true;
+	}
+
 	pub fn is_dragging(&self, idx: usize) -> bool {
 		self.dragging_idx.is_some_and(|i| i == idx)
 	}
@@ -74,18 +88,6 @@ impl CartridgePicker {
 		self.visible = false;
 	}
 
-	fn equip(&mut self, state: &mut State, idx: usize) {
-		if let Some(prev_idx) = self.state.equiped_idx {
-			// Smoothly move previously equiped cartridge back to the carousel
-			self.carousel.cards[prev_idx].play_tween(500);
-		}
-
-		self.state.equiped_idx = Some(idx);
-
-		let game = &GAMES[idx];
-		state.emu.load(game.bytes);
-	}
-
 	pub fn update(&mut self, ctx: &mut AppContext, state: &mut State) {
 		if !self.visible {
 			return;
@@ -115,12 +117,29 @@ impl CartridgePicker {
 			self.spot_tween.play(0.0, dur, Easing::InOutSine);
 
 			if Self::DROP_RECT.contains(&ctx.input.mouse_pos) {
-				self.equip(state, card_idx);
+				self.state.equip(card_idx);
+
+				// Load cartridge
+				let game = &GAMES[card_idx];
+				state.emu.load(game.bytes);
+			}
+		}
+
+		if self.state.just_unequipped {
+			if let Some(prev_idx) = self.state.unequipped_idx {
+				// Smoothly move previously equiped cartridge back to the carousel
+				self.carousel.cards[prev_idx].play_tween(500);
+			}
+
+			if self.state.equiped_idx.is_none() {
+				state.emu.program.fill(0);
+				state.emu.reset();
 			}
 		}
 
 		self.state.just_grabbed = false;
 		self.state.just_dropped = false;
+		self.state.just_unequipped = false;
 
 		self.begin_consume(ctx);
 	}
