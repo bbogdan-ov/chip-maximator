@@ -82,7 +82,7 @@ impl<'a> Text<'a> {
 		self
 	}
 
-	fn begin_draw(&mut self, painter: &mut Painter, canvas: CanvasId) {
+	pub fn begin_draw(&mut self, painter: &mut Painter, canvas: CanvasId) {
 		painter.set_uniforms(
 			Some(canvas),
 			Some((self.font.texture, painter.empty_texture)),
@@ -95,8 +95,7 @@ impl<'a> Text<'a> {
 		);
 	}
 
-	#[inline]
-	fn draw_char(&mut self, painter: &mut Painter, byte: u8, offset: Point) {
+	pub fn draw_char(&mut self, painter: &mut Painter, byte: u8, offset: Point) {
 		if byte == 0 {
 			return;
 		}
