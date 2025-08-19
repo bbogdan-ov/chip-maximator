@@ -166,7 +166,7 @@ impl CartridgePicker {
 			.with_fg(Color::gray(0.5))
 			.draw(&mut ctx.painter, canvas);
 
-		self.speaker.draw(ctx, canvas);
+		self.speaker.draw(ctx, canvas, &self.state);
 		self.desc.draw(ctx, canvas);
 		self.carousel.draw(ctx, canvas);
 

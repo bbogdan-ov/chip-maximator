@@ -1,10 +1,13 @@
 use crate::{
 	app::{AppContext, CANVAS_WIDTH},
-	math::Point,
-	painter::{CanvasId, Sprite},
+	games::GAMES,
+	math::{Color, Point, Rect},
+	painter::{CanvasId, Sprite, Text},
 	state::State,
 	util::Timer,
 };
+
+use super::PickerState;
 
 /// Pronounce
 #[allow(clippy::upper_case_acronyms)]
@@ -161,12 +164,28 @@ impl Speaker {
 		}
 	}
 
-	pub fn draw(&mut self, ctx: &mut AppContext, canvas: CanvasId) {
+	pub fn draw(&mut self, ctx: &mut AppContext, canvas: CanvasId, state: &PickerState) {
 		// Draw window frame
 		let win_size = ctx.assets.speaker_window.size;
 		Sprite::from(&ctx.assets.speaker_window)
 			.with_pos(Self::POS)
 			.draw(&mut ctx.painter, canvas);
+
+		// Draw smol display text
+		if let Some(idx) = state.equiped_idx {
+			let clip = Rect::new_xywh(Self::POS.x + 144.0, Self::POS.y + 11.0, 123.0, 14.0);
+
+			ctx.painter.set_clip(Some(clip));
+
+			let game = &GAMES[idx];
+			Text::new(&ctx.assets.w98_font)
+				.with_pos(clip.pos + Point::new(2.0, 0.0))
+				.with_fg(Color::new(0.0, 1.0, 0.0))
+				.with_bg(Color::TRANSPARENT)
+				.draw_chars(&mut ctx.painter, canvas, game.title.as_bytes());
+
+			ctx.painter.set_clip(None);
+		}
 
 		// Draw window buttons
 		self.draw_buttons(ctx, canvas);
