@@ -1,10 +1,12 @@
+use std::time::Duration;
+
 use crate::{
 	app::{AppContext, CANVAS_WIDTH},
 	games::GAMES,
 	math::{Color, Point, Rect},
 	painter::{CanvasId, Sprite, Text},
 	state::State,
-	util::Timer,
+	util::{Easing, Timer, Tweenable},
 };
 
 use super::PickerState;
@@ -55,6 +57,8 @@ pub struct Speaker {
 	cur_pronounce: usize,
 	is_pronouncing: bool,
 
+	/// Title typing animation tween
+	title_tween: Tweenable,
 	/// Delay between nibble pronounciation
 	nibble_timer: Timer,
 	/// Delay between pronounce animations
@@ -75,6 +79,7 @@ impl Speaker {
 			cur_pronounce: 0,
 			is_pronouncing: false,
 
+			title_tween: Tweenable::default(),
 			nibble_timer: Timer::from_millis(1000),
 			pronounce_timer: Timer::from_millis(100),
 			rest_timer: Timer::from_millis(1500),
@@ -83,12 +88,18 @@ impl Speaker {
 		}
 	}
 
-	pub fn update(&mut self, ctx: &mut AppContext, state: &State) {
+	pub fn update(&mut self, ctx: &mut AppContext, state: &State, picker: &PickerState) {
+		self.title_tween.update(&ctx.time);
 		self.rest_timer.update(&ctx.time);
 		self.nibble_timer.update(&ctx.time);
 		self.pronounce_timer.update(&ctx.time);
 
 		self.update_speaking(ctx, state);
+
+		if picker.just_equipped {
+			let dur = Duration::from_millis(1000);
+			self.title_tween.play_from(0.0, 1.0, dur, Easing::Linear);
+		}
 
 		let p = self.rest_timer.progress();
 		if p >= 1.0 {
@@ -178,11 +189,28 @@ impl Speaker {
 			ctx.painter.set_clip(Some(clip));
 
 			let game = &GAMES[idx];
-			Text::new(&ctx.assets.w98_font)
+			let mut text = Text::new(&ctx.assets.w98_font)
 				.with_pos(clip.pos + Point::new(2.0, 0.0))
 				.with_fg(Color::new(0.0, 1.0, 0.0))
-				.with_bg(Color::TRANSPARENT)
-				.draw_chars(&mut ctx.painter, canvas, game.title.as_bytes());
+				.with_bg(Color::TRANSPARENT);
+
+			text.begin_draw(&mut ctx.painter, canvas);
+			let bytes = game.title.as_bytes();
+			for (idx, byte) in bytes.iter().enumerate() {
+				const LETTERS: &str =
+					"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789.,-!?/#";
+
+				let f = idx as f32 / bytes.len() as f32;
+
+				let b = if f <= self.title_tween.value {
+					*byte
+				} else {
+					let i = (ctx.time.elapsed as usize * idx) % LETTERS.len();
+					LETTERS.as_bytes()[i]
+				};
+
+				text.draw_char(&mut ctx.painter, b, Point::default());
+			}
 
 			ctx.painter.set_clip(None);
 		}

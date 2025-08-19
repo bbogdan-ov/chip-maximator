@@ -152,6 +152,9 @@ fn simple_font_lookup() -> [u8; MAX_CHARS] {
 	offset += 1;
 	// /
 	lookup[47] = offset;
+	offset += 1;
+	// #
+	lookup[35] = offset;
 
 	lookup
 }

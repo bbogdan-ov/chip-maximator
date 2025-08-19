@@ -33,12 +33,14 @@ pub struct PickerState {
 
 	pub just_grabbed: bool,
 	pub just_dropped: bool,
+	pub just_equipped: bool,
 	pub just_unequipped: bool,
 }
 impl PickerState {
 	pub fn equip(&mut self, idx: usize) {
 		self.unequip();
 		self.equiped_idx = Some(idx);
+		self.just_equipped = true;
 	}
 	pub fn unequip(&mut self) {
 		self.unequipped_idx = self.equiped_idx;
@@ -103,7 +105,6 @@ impl CartridgePicker {
 		}
 
 		self.carousel.update(ctx, &mut self.state);
-		self.speaker.update(ctx, state);
 
 		if self.state.just_grabbed {
 			let dur = Duration::from_millis(200);
@@ -137,8 +138,11 @@ impl CartridgePicker {
 			}
 		}
 
+		self.speaker.update(ctx, state, &self.state);
+
 		self.state.just_grabbed = false;
 		self.state.just_dropped = false;
+		self.state.just_equipped = false;
 		self.state.just_unequipped = false;
 
 		self.begin_consume(ctx);
