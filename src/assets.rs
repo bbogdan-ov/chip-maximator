@@ -117,12 +117,11 @@ macro_rules! assets {
 	};
 }
 
-fn serif_font_lookup() -> FontLookup {
+fn simple_font_lookup() -> [u8; MAX_CHARS] {
 	let upper_a_z: [u8; 26] = std::array::from_fn(|i| i as u8);
 	let numbers: [u8; 10] = std::array::from_fn(|i| i as u8);
 
 	let mut lookup = [0; MAX_CHARS];
-	let mut widths = [CharWidth::Normal; MAX_CHARS];
 
 	// Skip the first blank char
 	let mut offset = 1_u8;
@@ -154,10 +153,29 @@ fn serif_font_lookup() -> FontLookup {
 	// /
 	lookup[47] = offset;
 
+	lookup
+}
+fn serif_font_lookup() -> FontLookup {
+	let lookup = simple_font_lookup();
+	let mut widths = [CharWidth::Normal; MAX_CHARS];
+
 	for byte in b" iljftrcgs-,.!?/".iter() {
 		widths[*byte as usize] = CharWidth::Half;
 	}
 	for byte in b"IJESpeaou0123456789".iter() {
+		widths[*byte as usize] = CharWidth::ThreeQuarters;
+	}
+
+	FontLookup::Custom(lookup, widths)
+}
+fn w98_font_lookup() -> FontLookup {
+	let lookup = simple_font_lookup();
+	let mut widths = [CharWidth::Normal; MAX_CHARS];
+
+	for byte in b" abcdefghkjltrIinopqsuvxyz.,-!/".iter() {
+		widths[*byte as usize] = CharWidth::Half;
+	}
+	for byte in b"ABCDEFGJKLMNOPQRSTUVXYZ0123456789mb?".iter() {
 		widths[*byte as usize] = CharWidth::ThreeQuarters;
 	}
 
@@ -205,6 +223,7 @@ assets! {
 	fonts {
 		ibm_font => "ibm-font", 8, 8, 256, false, FontLookup::Ascii,
 		serif_font => "serif-font", 26, 40, 72, true, {serif_font_lookup()},
+		w98_font => "w98-font", 12, 14, 70, false, {w98_font_lookup()},
 	}
 	sounds {
 		// TODO: key press/release sounds are kinda bad
