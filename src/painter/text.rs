@@ -2,7 +2,7 @@ use crate::math::{Color, Point};
 
 use super::{BatchFlag, CanvasId, Painter, QUAD_FLIPPED_UV, texture::Texture};
 
-pub const MAX_CHARS: usize = 256;
+pub const MAX_CHARS: usize = 128;
 
 #[derive(Debug, Default, Clone, Copy, PartialEq)]
 pub enum CharWidth {
