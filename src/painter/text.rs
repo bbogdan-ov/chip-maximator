@@ -114,11 +114,12 @@ impl<'a> Text<'a> {
 				match widths[byte as usize] {
 					CharWidth::Normal => (),
 					CharWidth::Half => kerning *= 0.5,
-					CharWidth::ThreeQuarters => kerning *= 0.75,
+					CharWidth::ThreeQuarters => kerning *= 0.7,
 				}
 			}
 		};
 
+		kerning = kerning.floor();
 		let f = kerning / size.x;
 
 		let mut uv = QUAD_FLIPPED_UV;
