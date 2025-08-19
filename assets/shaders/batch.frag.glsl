@@ -96,16 +96,6 @@ float circle(vec2 p, float r) {
 	return length(p) - r;
 }
 
-float borders() {
-	#define SMOOTH 0.05
-
-	float left = smoothstep(0.22, 0.34, uv.x);
-	float right = smoothstep(1.01, 0.9, uv.x);
-	float bottom = smoothstep(-0.01, 0.1, uv.y);
-	float top = smoothstep(1.01, 0.9, uv.y);
-	return smin(smin(left, right, SMOOTH), smin(top, bottom, SMOOTH), SMOOTH);
-}
-
 // Thanks to https://math.stackexchange.com/a/2323106
 float never_1(float x) {
 	#define E 2.71828
@@ -117,12 +107,12 @@ vec4 render_picker_bg() {
 	vec2 mouse = vec2(u_mouse_pos.x, 1.0 - u_mouse_pos.y);
 
 	float x = never_1(mouse.x) * 0.4;
-	float f = mix(1.0, circle(uv - vec2(x, mouse.y), 0.06) * 3.0, u_factor);
-	f = clamp(f, -1.0, 1.0);
-	float b = borders();
+	float circle = mix(1.0, circle(uv - vec2(x, mouse.y), 0.06) * 3.0, u_factor);
+	circle = clamp(circle, -1.0, 1.0);
+	float shadow = smoothstep(0.2, 0.4, uv.x);
 
 	float result = 0.0;
-	result = smin(f, b, 0.3);
+	result = smin(circle, shadow, 0.3);
 	result = smoothstep(0.0, 0.5, result);
 
 	float a = dither4x4(gl_FragCoord.xy, result);
