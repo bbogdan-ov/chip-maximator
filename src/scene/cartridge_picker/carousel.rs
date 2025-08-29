@@ -32,6 +32,8 @@ pub struct Card {
 	anim: Anim,
 }
 impl Card {
+	const DRAG_THRESHOLD: f32 = 60.0;
+
 	fn new(ctx: &mut AppContext, info: &'static GameInfo) -> Self {
 		Self {
 			info,
@@ -154,7 +156,7 @@ impl Card {
 				self.is_trying_to_drag = false;
 			}
 
-			if ctx.input.mouse_drag_delta().x.abs() > 40.0 {
+			if ctx.input.mouse_drag_delta().x.abs() > Self::DRAG_THRESHOLD {
 				self.grab(ctx, state, idx);
 			}
 		}
