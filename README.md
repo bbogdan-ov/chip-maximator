@@ -16,7 +16,7 @@
 
 *Only tested on Linux and Web builds*
 
-To build this EXPERIENCE you need to install [rust](https://www.rust-lang.org) programming language first
+To build this EXPERIENCE you have to install the [RUST](https://www.rust-lang.org) programming language first
 
 Build and run natively:
 
