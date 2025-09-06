@@ -178,6 +178,10 @@ impl Speaker {
 		}
 	}
 	fn update_talking(&mut self, ctx: &mut AppContext, state: &State) {
+		let Some(program) = state.emu.program else {
+			return;
+		};
+
 		if self.pronounce_nibble_timer.finished() {
 			let sounds = &[
 				ctx.assets.sound_0,
@@ -198,7 +202,7 @@ impl Speaker {
 				ctx.assets.sound_f,
 			];
 
-			let byte = state.emu.program[self.cur_nibble_idx / 2];
+			let byte = program[self.cur_nibble_idx / 2];
 
 			self.cur_pronounce = 0;
 			self.cur_nibble = if self.cur_nibble_idx % 2 == 0 {

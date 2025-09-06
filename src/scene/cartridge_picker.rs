@@ -137,7 +137,7 @@ impl CartridgePicker {
 			}
 
 			if self.state.equiped_idx.is_none() {
-				state.emu.program.fill(0);
+				state.emu.program = None;
 				state.emu.reset();
 			}
 		}

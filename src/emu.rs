@@ -60,7 +60,7 @@ pub struct Emu {
 	pub stack: [u16; Self::STACK_SIZE],
 
 	/// Current program data
-	pub program: [u8; Self::PROGRAM_SIZE],
+	pub program: Option<[u8; Self::PROGRAM_SIZE]>,
 	pub memory: [u8; Self::MEMORY_SIZE],
 	pub regs: Registers,
 	/// Delay timer (DT)
@@ -95,7 +95,7 @@ impl Default for Emu {
 			index: 0,
 			stack: [0; Self::STACK_SIZE],
 
-			program: [0; Self::PROGRAM_SIZE],
+			program: None,
 			memory: [0; Self::MEMORY_SIZE],
 			regs: Registers::default(),
 			delay_timer: 0,
@@ -147,7 +147,9 @@ impl Emu {
 	pub fn load(&mut self, program: &[u8]) {
 		// Store program
 		let len = program.len().min(Self::PROGRAM_SIZE);
-		self.program[..len].copy_from_slice(&program[..len]);
+		let mut bytes = [0_u8; Self::PROGRAM_SIZE];
+		bytes[..len].copy_from_slice(&program[..len]);
+		self.program = Some(bytes);
 
 		self.setup();
 	}
@@ -159,12 +161,14 @@ impl Emu {
 		self.memory[..FONT.len()].copy_from_slice(FONT);
 
 		// Load program
-		let start = Self::PROGRAM_START_ADDR;
-		let len = self.program.len();
+		if let Some(program) = self.program {
+			let start = Self::PROGRAM_START_ADDR;
+			let len = program.len();
 
-		self.memory[start..start + len].copy_from_slice(&self.program);
+			self.memory[start..start + len].copy_from_slice(&program);
 
-		self.pc = start as u16;
+			self.pc = start as u16;
+		}
 	}
 	/// Reset everything
 	pub fn reset(&mut self) {
