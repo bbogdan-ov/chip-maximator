@@ -2,6 +2,7 @@ use std::time::Duration;
 
 use crate::{
 	app::{AppContext, CANVAS_WIDTH},
+	emu::Emu,
 	games::GAMES,
 	math::{Color, Point, Rect},
 	painter::{CanvasId, Sprite, Text},
@@ -179,10 +180,16 @@ impl Speaker {
 	}
 	fn update_talking(&mut self, ctx: &mut AppContext, state: &State) {
 		let Some(program) = state.emu.program else {
+			self.state = SpeakerState::Sleeping;
 			return;
 		};
 
 		if self.pronounce_nibble_timer.finished() {
+			if self.cur_nibble_idx / 2 >= Emu::PROGRAM_SIZE {
+				self.state = SpeakerState::Sleeping;
+				return;
+			}
+
 			let sounds = &[
 				ctx.assets.sound_0,
 				ctx.assets.sound_1,
