@@ -75,7 +75,7 @@ impl Valve {
 		}
 
 		// Increase emulator speed
-		if state.valve.is_rotating && state.board.power {
+		if state.valve.is_rotating && state.board.power && state.emu.program.is_some() {
 			state.emu.inc_speed(diff * Self::STRENGH);
 		}
 	}
