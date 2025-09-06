@@ -67,10 +67,9 @@ fn decode_textures() {
 }
 
 fn decode_sounds() {
-	// TODO: add audio compression...
-	//       I tried to implement it, but the audio playback code must be refactored.
-	//       Audio compression doesn't give that much size compressiong (only a couple of Kb) anyway,
-	//       so i don't think there is a need for it
+	// I tried to implement an audio compression, but the audio playback code must be refactored.
+	// Audio compression doesn't give that much size compressiong (only a couple of Kb) anyway,
+	// so i don't think there is a need for it at least right now.
 
 	let out_dir = create_out_subdir("sounds");
 
