@@ -261,19 +261,6 @@ impl Speaker {
 		}
 
 		// Draw window buttons
-		self.draw_buttons(ctx, canvas);
-
-		// Draw speaker head
-		let speaker_size = ctx.assets.speaker.size;
-		Sprite::from(&ctx.assets.speaker)
-			.with_frame((self.cur_frame, 0))
-			.with_pos((
-				(win_pos.x + win_size.x / 2.0 - speaker_size.x / 2.0).floor(),
-				win_pos.y + 78.0,
-			))
-			.draw(&mut ctx.painter, canvas);
-	}
-	fn draw_buttons(&mut self, ctx: &mut AppContext, canvas: CanvasId) {
 		let mut button = Sprite::from(&ctx.assets.speaker_button);
 
 		let mut draw = |idx: i32, pos: Point| -> bool {
@@ -297,15 +284,25 @@ impl Speaker {
 		};
 
 		// Play button
-		if draw(0, Self::POS + Point::new(26.0, 10.0)) {
+		if draw(0, win_pos + Point::new(26.0, 10.0)) {
 			self.state = SpeakerState::Talking;
 		}
 		// Stop button
-		if draw(1, Self::POS + Point::new(52.0, 10.0)) {
+		if draw(1, win_pos + Point::new(52.0, 10.0)) {
 			self.state = SpeakerState::Sleeping;
 			if cfg!(debug_assertions) {
 				self.cur_nibble_idx = 0;
 			}
 		}
+
+		// Draw speaker head
+		let speaker_size = ctx.assets.speaker.size;
+		Sprite::from(&ctx.assets.speaker)
+			.with_frame((self.cur_frame, 0))
+			.with_pos((
+				(win_pos.x + win_size.x / 2.0 - speaker_size.x / 2.0).floor(),
+				win_pos.y + 78.0,
+			))
+			.draw(&mut ctx.painter, canvas);
 	}
 }
