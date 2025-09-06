@@ -294,6 +294,18 @@ impl Speaker {
 			self.state = SpeakerState::Sleeping;
 		}
 
+		ctx.painter.set_clip(Some(Rect::new(
+			win_pos + Point::new(27.0, 32.0),
+			(256.0, 256.0).into(),
+		)));
+
+		// Draw window grid
+		let offset_x = ctx.time.elapsed as f32 / 2.0 % 32.0;
+		let offset = Point::new(27.0 - offset_x.floor(), 160.0);
+		Sprite::from(&ctx.assets.speaker_grid)
+			.with_pos(win_pos + offset)
+			.draw(&mut ctx.painter, canvas);
+
 		// Draw speaker head
 		let speaker_size = ctx.assets.speaker.size;
 		Sprite::from(&ctx.assets.speaker)
@@ -303,5 +315,7 @@ impl Speaker {
 				win_pos.y + 78.0,
 			))
 			.draw(&mut ctx.painter, canvas);
+
+		ctx.painter.set_clip(None);
 	}
 }
