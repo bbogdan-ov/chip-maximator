@@ -131,6 +131,8 @@ impl Speaker {
 
 		match self.state {
 			SpeakerState::Sleeping => {
+				self.cur_nibble_idx = 0;
+
 				let p = self.rest_timer.progress();
 				if p >= 1.0 {
 					// Fully close eyes
@@ -290,9 +292,6 @@ impl Speaker {
 		// Stop button
 		if draw(1, win_pos + Point::new(52.0, 10.0)) {
 			self.state = SpeakerState::Sleeping;
-			if cfg!(debug_assertions) {
-				self.cur_nibble_idx = 0;
-			}
 		}
 
 		// Draw speaker head
