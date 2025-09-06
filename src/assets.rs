@@ -248,6 +248,9 @@ assets! {
 		grab_2_sound => "grab-2",
 		grab_3_sound => "grab-3",
 		grab_4_sound => "grab-4",
+		suffering_1_sound => "suffering-1",
+		suffering_2_sound => "suffering-2",
+		suffering_3_sound => "suffering-3",
 
 		sound_0 => "0",
 		sound_1 => "1",

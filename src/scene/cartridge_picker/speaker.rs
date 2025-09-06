@@ -118,6 +118,15 @@ impl Speaker {
 
 			self.pronounce_frame_timer.stop();
 			self.is_pronouncing = false;
+
+			ctx.audio.play_random(
+				&ctx.time,
+				&[
+					ctx.assets.suffering_1_sound,
+					ctx.assets.suffering_2_sound,
+					ctx.assets.suffering_3_sound,
+				],
+			);
 		}
 
 		match self.state {
