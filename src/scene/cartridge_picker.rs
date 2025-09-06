@@ -43,6 +43,10 @@ impl PickerState {
 		self.just_equipped = true;
 	}
 	pub fn unequip(&mut self) {
+		if self.equiped_idx.is_none() {
+			return;
+		}
+
 		self.unequipped_idx = self.equiped_idx;
 		self.equiped_idx = None;
 		self.just_unequipped = true;
