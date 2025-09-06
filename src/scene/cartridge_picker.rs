@@ -171,7 +171,7 @@ impl CartridgePicker {
 			.draw(&mut ctx.painter, canvas);
 
 		self.speaker.draw(ctx, canvas, &self.state);
-		self.desc.draw(ctx, canvas);
+		// self.desc.draw(ctx, canvas);
 		self.carousel.draw(ctx, canvas);
 
 		self.begin_consume(ctx);

@@ -205,15 +205,22 @@ impl Speaker {
 	}
 
 	pub fn draw(&mut self, ctx: &mut AppContext, canvas: CanvasId, state: &PickerState) {
+		let mut win_pos = Self::POS;
+
+		if self.state == SpeakerState::Suffering {
+			// Shake the window
+			win_pos.x += quad_rand::gen_range(-2.0, 2.0);
+		}
+
 		// Draw window frame
 		let win_size = ctx.assets.speaker_window.size;
 		Sprite::from(&ctx.assets.speaker_window)
-			.with_pos(Self::POS)
+			.with_pos(win_pos)
 			.draw(&mut ctx.painter, canvas);
 
 		// Draw smol display text
 		if let Some(idx) = state.equiped_idx {
-			let clip = Rect::new_xywh(Self::POS.x + 144.0, Self::POS.y + 11.0, 123.0, 14.0);
+			let clip = Rect::new_xywh(win_pos.x + 144.0, win_pos.y + 11.0, 123.0, 14.0);
 
 			ctx.painter.set_clip(Some(clip));
 
@@ -252,8 +259,8 @@ impl Speaker {
 		Sprite::from(&ctx.assets.speaker)
 			.with_frame((self.cur_frame, 0))
 			.with_pos((
-				(Self::POS.x + win_size.x / 2.0 - speaker_size.x / 2.0).floor(),
-				Self::POS.y + 78.0,
+				(win_pos.x + win_size.x / 2.0 - speaker_size.x / 2.0).floor(),
+				win_pos.y + 78.0,
 			))
 			.draw(&mut ctx.painter, canvas);
 	}
