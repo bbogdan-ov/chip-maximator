@@ -33,6 +33,7 @@ impl MovieDisplay {
 	pub fn offscreen_draw(&mut self, ctx: &mut AppContext) {
 		self.anim.update(&ctx.time);
 
+		// TODO: make it more interesting that it is right now
 		Sprite::from(&ctx.assets.movie)
 			.with_anim(&self.anim)
 			.draw(&mut ctx.painter, self.canvas);

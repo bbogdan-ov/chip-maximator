@@ -141,6 +141,7 @@ impl Titles {
 		// Draw background image
 		Sprite::from(&ctx.assets.titles_bg).draw(&mut ctx.painter, canvas);
 
+		// TODO: add something interesting
 		// Draw title
 		Text::new(&ctx.assets.serif_font)
 			.with_pos((8.0, 8.0))
