@@ -293,8 +293,6 @@ impl Scene {
 	}
 
 	fn offscreen_draw(&mut self, ctx: &mut AppContext, state: &mut State) {
-		self.picker.offscreen_draw(ctx);
-
 		match self.cur_board_anim {
 			// Front board
 			BoardAnim::Front => {
