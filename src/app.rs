@@ -20,8 +20,6 @@ use crate::{
 pub const CANVAS_WIDTH: f32 = 700.0;
 pub const CANVAS_HEIGHT: f32 = 700.0;
 
-const DEFAULT_ROM: &[u8] = crate::games::GAMES[0].bytes;
-
 /// Time
 pub struct Time {
 	last_time: NativeInstant,
@@ -119,18 +117,11 @@ impl App {
 		};
 
 		let mut state = State::default();
-		if cfg!(debug_assertions) {
-			state.board.power = true;
-		}
 
-		// Load ROM
-		#[cfg(target_arch = "wasm32")]
-		state.emu.load(DEFAULT_ROM);
-
+		// Load rom from the specified path if any
 		#[cfg(not(target_arch = "wasm32"))]
-		match cli.rom_path.and_then(read_rom) {
-			Some(bytes) => state.emu.load(&bytes),
-			None => state.emu.load(DEFAULT_ROM),
+		if let Some(bytes) = cli.rom_path.and_then(read_rom) {
+			state.emu.load(&bytes);
 		}
 
 		let canvas = context.painter.context.new_canvas(

@@ -42,6 +42,10 @@ impl Icon {
 		self.inner = self.inner.with_pos(pos);
 		self
 	}
+	pub fn with_scale(mut self, scale: f32) -> Self {
+		self.inner = self.inner.with_scale(scale);
+		self
+	}
 	pub fn with_flip(mut self, flip: impl Into<Point<bool>>) -> Self {
 		self.inner = self.inner.with_flip(flip);
 		self

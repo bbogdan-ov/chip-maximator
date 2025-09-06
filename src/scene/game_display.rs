@@ -2,7 +2,7 @@ use crate::{
 	app::AppContext,
 	emu::Emu,
 	math::{Color, Point},
-	painter::{CanvasId, Painter, Sprite, Text, Texture, TextureOpts},
+	painter::{CanvasId, Icon, IconKind, Painter, Sprite, Text, Texture, TextureOpts},
 	state::State,
 	util::Timer,
 };
@@ -23,6 +23,9 @@ impl GameDisplay {
 	const BUF_SIZE: usize = Emu::SCREEN_BUF_SIZE * 3;
 	const PROGRESS_WIDTH: usize = 14;
 
+	const FG_COLOR: Color = Color::new(0.7, 0.8, 0.7);
+	const BG_COLOR: Color = Color::gray(0.1);
+
 	pub fn new(ctx: &mut AppContext) -> Self {
 		let buffer = [0; Self::BUF_SIZE];
 
@@ -38,7 +41,7 @@ impl GameDisplay {
 
 		let canvas = ctx.painter.context.new_canvas(
 			(Self::SIZE.x, Self::SIZE.y),
-			Color::BLACK,
+			Color::gray(0.1),
 			Default::default(),
 		);
 
@@ -62,15 +65,15 @@ impl GameDisplay {
 
 	#[allow(clippy::identity_op)]
 	fn update_texture(&mut self, painter: &Painter, emu: &Emu) {
+		let min = (255.0 * Self::BG_COLOR.red) as u8;
+
 		for i in (0..self.buffer.len()).step_by(3) {
 			let buf = &mut self.buffer;
 
-			let min = (255.0 * 0.1) as u8;
-
 			if emu.screen[i / 3] {
-				buf[i + 0] = (255.0 * 0.7) as u8;
-				buf[i + 1] = (255.0 * 0.8) as u8;
-				buf[i + 2] = (255.0 * 0.7) as u8;
+				buf[i + 0] = (255.0 * Self::FG_COLOR.red) as u8;
+				buf[i + 1] = (255.0 * Self::FG_COLOR.green) as u8;
+				buf[i + 2] = (255.0 * Self::FG_COLOR.blue) as u8;
 			} else {
 				// Imitate bad display by fading out each pixel on every frame
 				let color = (buf[i] as f32 / 1.5) as u8;
@@ -91,6 +94,25 @@ impl GameDisplay {
 	}
 
 	pub fn offscreen_draw(&mut self, ctx: &mut AppContext, state: &mut State) {
+		if state.emu.program.is_none() {
+			// Draw "INSERT A CARTRIDGE" text
+			Text::new(&ctx.assets.ibm_font)
+				.with_pos((8.0, Self::SIZE.y - 16.0 - 8.0))
+				.with_fg(Self::FG_COLOR)
+				.with_bg(Self::BG_COLOR)
+				.draw_line(&mut ctx.painter, self.canvas, b"INSERT")
+				.draw_line(&mut ctx.painter, self.canvas, b"A CARTRIDGE");
+
+			Icon::new(&ctx.assets, IconKind::Pointer)
+				.with_pos((Self::SIZE.x - 16.0, 12.0))
+				.with_scale(0.5)
+				.with_flip((true, false))
+				.with_color(Self::FG_COLOR)
+				.draw(ctx, self.canvas);
+
+			return;
+		}
+
 		self.update_texture(&ctx.painter, &state.emu);
 
 		// Draw game screen
@@ -102,8 +124,8 @@ impl GameDisplay {
 
 			Text::new(&ctx.assets.ibm_font)
 				.with_pos((8.0, Self::SIZE.y - 16.0 - 8.0))
-				.with_fg((0.7, 0.8, 0.7))
-				.with_bg(Color::gray(0.1))
+				.with_fg(Self::FG_COLOR)
+				.with_bg(Self::BG_COLOR)
 				.draw_line(&mut ctx.painter, self.canvas, b"cpu speed")
 				.draw_chars(&mut ctx.painter, self.canvas, &progress_text);
 		}
