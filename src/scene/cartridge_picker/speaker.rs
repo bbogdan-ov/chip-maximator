@@ -47,10 +47,19 @@ const LETTERS_PRONOUNCE: [&[Pronounce]; 16] = {
 	]
 };
 
+/// Speaker state
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum SpeakerState {
+	Sleeping,
+	Talking,
+	Suffering,
+}
+
 /// Speaker
 /// Reads and speaks cartridge program bytes out loud
 pub struct Speaker {
-	speaking: bool,
+	state: SpeakerState,
+
 	cur_nibble: u8,
 	/// Current unsigned 4-bit int index in cartridge ROM
 	cur_nibble_idx: usize,
@@ -60,85 +69,105 @@ pub struct Speaker {
 	/// Title typing animation tween
 	title_tween: Tweenable,
 	/// Delay between nibble pronounciation
-	nibble_timer: Timer,
-	/// Delay between pronounce animations
-	pronounce_timer: Timer,
-	/// Delay before closing eyes
+	pronounce_nibble_timer: Timer,
+	/// Delay between pronounce animation frames
+	pronounce_frame_timer: Timer,
+	/// Delay before going to sleep
 	rest_timer: Timer,
+	suffering_timer: Timer,
 
-	speaker_frame: i32,
+	cur_frame: i32,
 }
 impl Speaker {
 	const POS: Point = Point::new(CANVAS_WIDTH - 320.0, 30.0);
 
 	pub fn new() -> Self {
 		Self {
-			speaking: false,
+			state: SpeakerState::Sleeping,
+
 			cur_nibble: 0,
 			cur_nibble_idx: 0,
 			cur_pronounce: 0,
 			is_pronouncing: false,
 
 			title_tween: Tweenable::default(),
-			nibble_timer: Timer::from_millis(1000),
-			pronounce_timer: Timer::from_millis(100),
+			pronounce_nibble_timer: Timer::from_millis(1000),
+			pronounce_frame_timer: Timer::from_millis(100),
 			rest_timer: Timer::from_millis(1500),
+			suffering_timer: Timer::from_millis(200),
 
-			speaker_frame: 0,
+			cur_frame: 0,
 		}
 	}
 
 	pub fn update(&mut self, ctx: &mut AppContext, state: &State, picker: &PickerState) {
 		self.title_tween.update(&ctx.time);
+		self.pronounce_nibble_timer.update(&ctx.time);
+		self.pronounce_frame_timer.update(&ctx.time);
 		self.rest_timer.update(&ctx.time);
-		self.nibble_timer.update(&ctx.time);
-		self.pronounce_timer.update(&ctx.time);
-
-		self.update_speaking(ctx, state);
+		self.suffering_timer.update(&ctx.time);
 
 		if picker.just_equipped {
 			let dur = Duration::from_millis(1000);
 			self.title_tween.play_from(0.0, 1.0, dur, Easing::Linear);
 		}
 
-		let p = self.rest_timer.progress();
-		if p >= 1.0 {
-			// Fully close eyes
-			self.speaker_frame = 0;
-		} else if p > 0.9 {
-			// Close eyes in half
-			self.speaker_frame = 1;
+		if picker.just_unequipped && self.state == SpeakerState::Talking {
+			self.suffering_timer.start();
+			self.state = SpeakerState::Suffering;
+
+			self.pronounce_frame_timer.stop();
+			self.is_pronouncing = false;
 		}
 
-		if self.pronounce_timer.finished() && self.is_pronouncing {
+		match self.state {
+			SpeakerState::Sleeping => {
+				let p = self.rest_timer.progress();
+				if p >= 1.0 {
+					// Fully close eyes
+					self.cur_frame = 0;
+				} else if p > 0.9 {
+					// Close eyes in half
+					self.cur_frame = 1;
+				}
+			}
+			SpeakerState::Talking => self.update_talking(ctx, state),
+			SpeakerState::Suffering => {
+				if ctx.time.elapsed % 2 == 0 {
+					self.cur_frame = quad_rand::gen_range(8, 15);
+				}
+				if self.suffering_timer.finished() {
+					self.rest_timer.stop();
+					self.state = SpeakerState::Sleeping;
+				}
+			}
+		}
+
+		if self.pronounce_frame_timer.finished() && self.is_pronouncing {
 			let pronounces = LETTERS_PRONOUNCE[self.cur_nibble as usize];
 			if self.cur_pronounce >= pronounces.len() {
-				self.speaker_frame = 2;
+				self.cur_frame = 2;
 				self.is_pronouncing = false;
 				return;
 			}
 
 			match pronounces[self.cur_pronounce] {
-				Pronounce::A => self.speaker_frame = 3,
-				Pronounce::AAA => self.speaker_frame = 4,
-				Pronounce::OOO => self.speaker_frame = 5,
-				Pronounce::III => self.speaker_frame = 6,
-				Pronounce::FFF => self.speaker_frame = 7,
+				Pronounce::A => self.cur_frame = 3,
+				Pronounce::AAA => self.cur_frame = 4,
+				Pronounce::OOO => self.cur_frame = 5,
+				Pronounce::III => self.cur_frame = 6,
+				Pronounce::FFF => self.cur_frame = 7,
 			}
 
-			if self.speaking || self.cur_pronounce > 0 {
+			if self.state == SpeakerState::Talking || self.cur_pronounce > 0 {
 				self.cur_pronounce += 1;
-				self.pronounce_timer.start();
+				self.pronounce_frame_timer.start();
 				self.rest_timer.start();
 			}
 		}
 	}
-	fn update_speaking(&mut self, ctx: &mut AppContext, state: &State) {
-		if !self.speaking {
-			return;
-		}
-
-		if self.nibble_timer.finished() {
+	fn update_talking(&mut self, ctx: &mut AppContext, state: &State) {
+		if self.pronounce_nibble_timer.finished() {
 			let sounds = &[
 				ctx.assets.sound_0,
 				ctx.assets.sound_1,
@@ -171,7 +200,7 @@ impl Speaker {
 
 			self.cur_nibble_idx += 1;
 			self.is_pronouncing = true;
-			self.nibble_timer.start();
+			self.pronounce_nibble_timer.start();
 		}
 	}
 
@@ -221,7 +250,7 @@ impl Speaker {
 		// Draw speaker head
 		let speaker_size = ctx.assets.speaker.size;
 		Sprite::from(&ctx.assets.speaker)
-			.with_frame((self.speaker_frame, 0))
+			.with_frame((self.cur_frame, 0))
 			.with_pos((
 				(Self::POS.x + win_size.x / 2.0 - speaker_size.x / 2.0).floor(),
 				Self::POS.y + 78.0,
@@ -253,11 +282,11 @@ impl Speaker {
 
 		// Play button
 		if draw(0, Self::POS + Point::new(26.0, 10.0)) {
-			self.speaking = true;
+			self.state = SpeakerState::Talking;
 		}
 		// Stop button
 		if draw(1, Self::POS + Point::new(52.0, 10.0)) {
-			self.speaking = false;
+			self.state = SpeakerState::Sleeping;
 			if cfg!(debug_assertions) {
 				self.cur_nibble_idx = 0;
 			}

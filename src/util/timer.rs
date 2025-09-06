@@ -30,6 +30,9 @@ impl Timer {
 	pub fn start(&mut self) {
 		self.time = self.duration;
 	}
+	pub fn stop(&mut self) {
+		self.time = Duration::default();
+	}
 
 	pub fn progress(&self) -> f32 {
 		if self.duration.is_zero() {
