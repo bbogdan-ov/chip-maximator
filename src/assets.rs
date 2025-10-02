@@ -162,10 +162,10 @@ fn serif_font_lookup() -> FontLookup {
 	let lookup = simple_font_lookup();
 	let mut widths = [CharWidth::Normal; MAX_CHARS];
 
-	for byte in b" iljftrcgs-,.!?/".iter() {
+	for byte in b" iljf-,.!?/".iter() {
 		widths[*byte as usize] = CharWidth::Half;
 	}
-	for byte in b"IJESpeaou0123456789".iter() {
+	for byte in b"IJESCcrytpeaougs0123456789".iter() {
 		widths[*byte as usize] = CharWidth::ThreeQuarters;
 	}
 
