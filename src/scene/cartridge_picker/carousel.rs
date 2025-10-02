@@ -269,7 +269,6 @@ impl Carousel {
 			self.sounds_played -= 1;
 		}
 		if self.sounds_played < 2 && self.sound_radians.abs() >= Self::ANGLE_BETWEEN / 2.0 {
-			// TODO: may we should use a different sound for the carousel rotation
 			ctx.audio.play(ctx.assets.rotation_sound);
 			self.sounds_played += 3;
 			self.sound_radians = 0.0;

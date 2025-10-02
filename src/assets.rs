@@ -229,7 +229,6 @@ assets! {
 		w98_font => "w98-font", 12, 14, 70, false, {w98_font_lookup()},
 	}
 	sounds {
-		// TODO: key press/release sounds are kinda bad
 		key_press_1_sound => "key-press-1",
 		key_release_1_sound => "key-release-1",
 		key_press_2_sound => "key-press-2",

@@ -27,7 +27,6 @@ enum Pronounce {
 const LETTERS_PRONOUNCE: [&[Pronounce]; 16] = {
 	use Pronounce::*;
 
-	// TODO: lips animation looks wrong for some letters/numbers
 	[
 		&[III, OOO, OOO, A], // 0
 		&[OOO, AAA, III], // 1
