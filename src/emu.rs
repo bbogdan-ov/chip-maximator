@@ -289,20 +289,11 @@ impl Emu {
 			(0xc, _, _, _) => self.set_rand(x, byte),
 
 			// `Vx = Vx | Vy`
-			(8, _, _, 1) => {
-				self.regs[0xf] = 0;
-				self.regs[x] |= self.regs[y];
-			}
+			(8, _, _, 1) => self.regs[x] |= self.regs[y],
 			// `Vx = Vx & Vy`
-			(8, _, _, 2) => {
-				self.regs[0xf] = 0;
-				self.regs[x] &= self.regs[y];
-			}
+			(8, _, _, 2) => self.regs[x] &= self.regs[y],
 			// `Vx = Vx ^ Vy`
-			(8, _, _, 3) => {
-				self.regs[0xf] = 0;
-				self.regs[x] ^= self.regs[y];
-			}
+			(8, _, _, 3) => self.regs[x] ^= self.regs[y],
 
 			// `Vx = Vx >> 1`
 			(8, _, _, 6) => self.shift_right(x),
@@ -439,35 +430,35 @@ impl Emu {
 	/// `Vx += Vy; VF = overflow`
 	pub fn add_vx_vy(&mut self, x: u8, y: u8) {
 		let (byte, overflow) = self.regs[x].overflowing_add(self.regs[y]);
-		self.regs[0xF] = overflow as u8;
 		self.regs[x] = byte;
+		self.regs[0xF] = overflow as u8;
 	}
 	/// `Vx -= Vy; VF = NOT underflow`
 	pub fn sub_vx_vy(&mut self, x: u8, y: u8) {
 		let vx = self.regs[x];
 		let vy = self.regs[y];
 
-		self.regs[0xF] = (vx >= vy) as u8;
 		self.regs[x] = vx.wrapping_sub(vy);
+		self.regs[0xF] = (vx >= vy) as u8;
 	}
 	/// `Vx = Vy - Vx; VF = NOT underflow`
 	pub fn sub_vy_vx(&mut self, x: u8, y: u8) {
 		let vx = self.regs[x];
 		let vy = self.regs[y];
 
-		self.regs[0xF] = (vy >= vx) as u8;
 		self.regs[x] = vy.wrapping_sub(vx);
+		self.regs[0xF] = (vy >= vx) as u8;
 	}
 
 	/// Set `VF` to the least-significant bit of `Vx` and then divide `Vx` by 2
 	pub fn shift_right(&mut self, x: u8) {
-		self.regs[0xF] = self.regs[x] & 0x1;
 		self.regs[x] >>= 1;
+		self.regs[0xF] = self.regs[x] & 0x1;
 	}
 	/// Set `VF` to the most-significant bit of `Vx` and then multiply `Vx` by 2
 	pub fn shift_left(&mut self, x: u8) {
-		self.regs[0xF] = (self.regs[x] & 0x80) >> 7;
 		self.regs[x] <<= 1;
+		self.regs[0xF] = (self.regs[x] & 0x80) >> 7;
 	}
 
 	/// `Vx = random value & byte`
