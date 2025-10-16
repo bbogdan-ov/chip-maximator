@@ -11,6 +11,7 @@ pub struct Key {
 	pub key_code: Option<KeyCode>,
 	pub pressed: bool,
 	pub just_pressed: bool,
+	pub just_released: bool,
 	pub hovered: bool,
 	sprite: Sprite,
 }
@@ -20,6 +21,7 @@ impl Key {
 			key_code: None,
 			pressed: false,
 			just_pressed: false,
+			just_released: false,
 			hovered: false,
 			sprite: Sprite::from(texture),
 		}
@@ -43,7 +45,7 @@ impl Key {
 		self.hovered = self.sprite.is_hover(input);
 		self.pressed = self.hovered && input.left_is_pressed() || key_is_pressed;
 		self.just_pressed = self.hovered && input.left_just_pressed() || key_just_pressed;
-		let just_released = self.hovered && input.left_just_released() || key_just_released;
+		self.just_released = self.hovered && input.left_just_released() || key_just_released;
 
 		// Set pressed frame
 		if self.pressed {
@@ -62,7 +64,7 @@ impl Key {
 					ctx.assets.key_press_3_sound,
 				],
 			);
-		} else if just_released {
+		} else if self.just_released {
 			ctx.audio.play_random(
 				&ctx.time,
 				&[

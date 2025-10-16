@@ -72,9 +72,9 @@ pub struct Emu {
 	pub pressed_keys: [bool; Self::KEYS_COUNT],
 	/// Current instruction
 	pub cur_ins: (u8, u8),
-	/// If `Some(register)`, stop execution, wait for a keypress and write the pressed key into
+	/// If `Some(register)`, stop execution, wait for a key release and write the released key into
 	/// specified register, otherwise continue the execution
-	pub wait_for_keypress: Option<u8>,
+	pub wait_for_keyrelease: Option<u8>,
 	/// Whether a pressed key check occured
 	pub key_checked: bool,
 	/// Steps per frame multiplier
@@ -103,7 +103,7 @@ impl Default for Emu {
 
 			pressed_keys: [false; Self::KEYS_COUNT],
 			cur_ins: (0, 0),
-			wait_for_keypress: None,
+			wait_for_keyrelease: None,
 			key_checked: false,
 			speed: 1.0,
 			error: false,
@@ -197,8 +197,8 @@ impl Emu {
 			self.pc = Self::PROGRAM_START_ADDR as u16;
 		}
 
-		// Wait for a keypress
-		if self.wait_for_keypress.is_some() {
+		// Wait for a keyrelease
+		if self.wait_for_keyrelease.is_some() {
 			return;
 		}
 
@@ -268,8 +268,8 @@ impl Emu {
 			// Skip if `Vx != Vy`
 			(9, _, _, 0) => skip_if!(self.regs[x] != self.regs[y]),
 
-			// Wait for a keypress
-			(0xf, _, 0, 0xa) => self.wait_for_keypress = Some(x),
+			// Wait for a keyrelease
+			(0xf, _, 0, 0xa) => self.wait_for_keyrelease = Some(x),
 			// Skip if `Vx == pressed key`
 			(0xe, _, 9, 0xe) => skip_if!(self.is_key_pressed(self.regs[x])),
 			// Skip if `Vx != pressed key`
@@ -289,11 +289,20 @@ impl Emu {
 			(0xc, _, _, _) => self.set_rand(x, byte),
 
 			// `Vx = Vx | Vy`
-			(8, _, _, 1) => self.regs[x] |= self.regs[y],
+			(8, _, _, 1) => {
+				self.regs[0xf] = 0;
+				self.regs[x] |= self.regs[y];
+			}
 			// `Vx = Vx & Vy`
-			(8, _, _, 2) => self.regs[x] &= self.regs[y],
+			(8, _, _, 2) => {
+				self.regs[0xf] = 0;
+				self.regs[x] &= self.regs[y];
+			}
 			// `Vx = Vx ^ Vy`
-			(8, _, _, 3) => self.regs[x] ^= self.regs[y],
+			(8, _, _, 3) => {
+				self.regs[0xf] = 0;
+				self.regs[x] ^= self.regs[y];
+			}
 
 			// `Vx = Vx >> 1`
 			(8, _, _, 6) => self.shift_right(x),
@@ -348,14 +357,13 @@ impl Emu {
 		self.set_speed(self.speed + diff);
 	}
 
-	pub fn set_pressed_key(&mut self, key: u8, is_pressed: bool, just_pressed: bool) {
+	pub fn set_pressed_key(&mut self, key: u8, is_pressed: bool) {
 		self.pressed_keys[key as usize] = is_pressed;
-
-		if just_pressed {
-			if let Some(x) = self.wait_for_keypress {
-				self.regs[x] = key;
-				self.wait_for_keypress = None;
-			}
+	}
+	pub fn set_released_key(&mut self, key: u8) {
+		if let Some(x) = self.wait_for_keyrelease {
+			self.regs[x] = key;
+			self.wait_for_keyrelease = None;
 		}
 	}
 	pub fn is_key_pressed(&mut self, key: u8) -> bool {
@@ -431,15 +439,15 @@ impl Emu {
 	/// `Vx += Vy; VF = overflow`
 	pub fn add_vx_vy(&mut self, x: u8, y: u8) {
 		let (byte, overflow) = self.regs[x].overflowing_add(self.regs[y]);
-		self.regs[x] = byte;
 		self.regs[0xF] = overflow as u8;
+		self.regs[x] = byte;
 	}
 	/// `Vx -= Vy; VF = NOT underflow`
 	pub fn sub_vx_vy(&mut self, x: u8, y: u8) {
 		let vx = self.regs[x];
 		let vy = self.regs[y];
 
-		self.regs[0xF] = (vx > vy) as u8;
+		self.regs[0xF] = (vx >= vy) as u8;
 		self.regs[x] = vx.wrapping_sub(vy);
 	}
 	/// `Vx = Vy - Vx; VF = NOT underflow`
@@ -447,7 +455,7 @@ impl Emu {
 		let vx = self.regs[x];
 		let vy = self.regs[y];
 
-		self.regs[0xF] = (vy > vx) as u8;
+		self.regs[0xF] = (vy >= vx) as u8;
 		self.regs[x] = vy.wrapping_sub(vx);
 	}
 
