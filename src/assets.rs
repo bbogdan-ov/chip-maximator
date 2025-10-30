@@ -200,7 +200,6 @@ assets! {
 		reset => "reset", 31, 31, 2, 1,
 		heated_cpu => "heated-cpu", 74, 71, 1, 1,
 		link => "link", 53, 53, 3, 2,
-		slot => "slot", 126, 119, 2, 1,
 		titles_bg => "titles-bg", 256, 256, 1, 1,
 		card => "card", 71, 96, 13, 4,
 		small_card => "small-card", 35, 51, 13, 1,

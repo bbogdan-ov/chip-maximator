@@ -500,15 +500,10 @@ impl FrontBoard {
 		self.timers.draw(ctx, state, canvas);
 		self.valve.draw(ctx, state, canvas);
 
-		let slot = Sprite::from(&ctx.assets.slot)
-			.with_frame((1, 0))
-			.with_pos((534.0, 93.0));
-
-		if slot.is_hover(&mut ctx.input) && ctx.input.left_just_pressed() {
+		// TODO: temporarily
+		if ctx.input.key_just_pressed(KeyCode::P) {
 			picker.show();
 		}
-
-		slot.draw(&mut ctx.painter, canvas);
 	}
 	fn draw_displays(&mut self, ctx: &mut AppContext, state: &mut State, canvas: CanvasId) {
 		if !state.board.power {
