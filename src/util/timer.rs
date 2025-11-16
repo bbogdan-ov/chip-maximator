@@ -27,6 +27,9 @@ impl Timer {
 		self.duration = duration;
 		self.time = duration;
 	}
+	pub fn start_millis(&mut self, millis: u64) {
+		self.start_duration(Duration::from_millis(millis));
+	}
 	pub fn start(&mut self) {
 		self.time = self.duration;
 	}
