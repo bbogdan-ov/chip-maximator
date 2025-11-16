@@ -57,6 +57,7 @@ enum WriterState {
 	Typing,
 	MakingTypo { one_bad_letter: bool, len: usize },
 	ErasingTypo,
+	ErasingEverything,
 }
 
 /// Cartridge description display
@@ -70,7 +71,8 @@ pub struct Description {
 	char_idx: usize,
 	was_typing_newlines: bool,
 
-	cur_game: Option<&'static GameInfo>,
+	cur_game_idx: Option<usize>,
+	next_game_idx: Option<usize>,
 
 	typing_timer: Timer,
 	cursor_blink_timer: Timer,
@@ -89,7 +91,8 @@ impl Description {
 			char_idx: 0,
 			was_typing_newlines: false,
 
-			cur_game: None,
+			cur_game_idx: None,
+			next_game_idx: None,
 
 			typing_timer: Timer::from_millis(100),
 			cursor_blink_timer: Timer::from_millis(300),
@@ -139,17 +142,52 @@ impl Description {
 		self.typo_len += 1;
 	}
 
-	fn start_typing(&mut self) {
+	fn start_typing(&mut self, idx: usize) {
+		let game = &GAMES[idx];
+		if game.desc.is_empty() {
+			return;
+		}
+
+		self.cur_game_idx = Some(idx);
 		self.char_idx = 0;
 		self.writer_state = WriterState::Typing;
 	}
+	fn erase_everything(&mut self) {
+		if self.writer_state == WriterState::ErasingEverything {
+			return;
+		}
+
+		self.writer_state = WriterState::ErasingEverything;
+		self.start_typing_timer(8);
+	}
 
 	fn update_typing(&mut self) {
-		let Some(game) = self.cur_game else {
+		let Some(game_idx) = self.cur_game_idx else {
 			return;
 		};
+		let game = &GAMES[game_idx];
 
 		if self.writer_state == WriterState::Nothing || !self.typing_timer.finished() {
+			return;
+		}
+
+		if self.writer_state == WriterState::ErasingEverything {
+			if self.typo_len > 0 {
+				self.typo_len -= 1;
+				self.start_typing_timer(1);
+			} else if self.char_idx > 0 {
+				self.char_idx -= 1;
+				self.start_typing_timer(1);
+			} else {
+				self.writer_state = WriterState::Nothing;
+				self.cur_game_idx = None;
+
+				if let Some(next_idx) = self.next_game_idx {
+					self.start_typing(next_idx);
+					self.start_typing_timer(10);
+				}
+			}
+
 			return;
 		}
 
@@ -165,6 +203,7 @@ impl Description {
 
 		match &mut self.writer_state {
 			WriterState::Nothing => unreachable!(),
+			WriterState::ErasingEverything => unreachable!(),
 
 			WriterState::Typing if next_char == b'\n' => {
 				self.advance_typing();
@@ -241,19 +280,26 @@ impl Description {
 				return;
 			};
 
-			let game = &GAMES[equiped_idx];
-			if game.desc.is_empty() {
-				return;
+			if let Some(cur_game_idx) = self.cur_game_idx {
+				if cur_game_idx == equiped_idx {
+					self.writer_state = WriterState::Typing;
+					self.start_typing_timer(10);
+				} else {
+					self.next_game_idx = Some(equiped_idx);
+					self.erase_everything();
+				}
+			} else {
+				self.start_typing(equiped_idx);
 			}
-
-			self.cur_game = Some(game);
-			self.start_typing();
+		}
+		if picker.just_unequipped {
+			self.erase_everything();
 		}
 
 		self.update_typing();
 	}
 
-	pub fn draw(&mut self, ctx: &mut AppContext, canvas: CanvasId, picker: &PickerState) {
+	pub fn draw(&mut self, ctx: &mut AppContext, canvas: CanvasId) {
 		// Draw window
 		Sprite::from(&ctx.assets.description_window)
 			.with_pos(Self::POS)
@@ -297,8 +343,8 @@ impl Description {
 			ctx.painter.set_clip(None);
 		}
 
-		if let Some(idx) = picker.equiped_idx {
-			let game = &GAMES[idx];
+		if let Some(game_idx) = self.cur_game_idx {
+			let game = &GAMES[game_idx];
 
 			// Draw text
 			let mut text = Text::new(&ctx.assets.serif_font)
