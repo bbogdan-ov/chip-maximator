@@ -2,25 +2,21 @@ use crate::math::{Color, Point};
 
 use super::{BatchFlag, CanvasId, Painter, QUAD_FLIPPED_UV, texture::Texture};
 
-pub const MAX_CHARS: usize = 128;
+pub const START_CHAR: u8 = b' ';
+// Include only printable ASCII characters (95)
+pub const MAX_CHARS: usize = (b'~' - START_CHAR + 1) as usize;
 
-#[derive(Debug, Default, Clone, Copy, PartialEq)]
-pub enum CharWidth {
-	#[default]
-	Normal,
-	Half,
-	ThreeQuarters,
-}
-
-// Allow because `FontLookup` is used only once per font so it is more optimal to store it in
-// the stack rather than in the heap (but i might be wrong)
-#[allow(clippy::large_enum_variant)]
 /// Font chars lookup table
 #[derive(Debug)]
 pub enum FontLookup {
-	/// All 256 ascii chars
-	Ascii,
-	Custom([u8; MAX_CHARS], [CharWidth; MAX_CHARS]),
+	/// 256 monospace characters
+	Monospace256,
+	Custom {
+		/// Frame indices of chars
+		indices: [u8; MAX_CHARS],
+		/// Widths of chars
+		widths: [u8; MAX_CHARS],
+	},
 }
 
 /// Text font texture
@@ -102,19 +98,15 @@ impl<'a> Text<'a> {
 
 		let size = self.char_size();
 		let mut kerning = size.x;
-		let findex: f32;
+		let frame_idx: f32;
 
 		match self.font.lookup {
-			FontLookup::Ascii => {
-				findex = byte as f32;
+			FontLookup::Monospace256 => {
+				frame_idx = byte as f32;
 			}
-			FontLookup::Custom(table, widths) => {
-				findex = table[byte as usize] as f32;
-				match widths[byte as usize] {
-					CharWidth::Normal => (),
-					CharWidth::Half => kerning *= 0.5,
-					CharWidth::ThreeQuarters => kerning *= 0.7,
-				}
+			FontLookup::Custom { indices, widths } => {
+				frame_idx = indices[(byte - START_CHAR) as usize] as f32;
+				kerning = widths[(byte - START_CHAR) as usize] as f32 * self.font_size;
 			}
 		};
 
@@ -124,7 +116,7 @@ impl<'a> Text<'a> {
 		let mut uv = QUAD_FLIPPED_UV;
 		for row in &mut uv {
 			// Doing some calculations to crop the current char
-			row.x = (row.x * f + findex + (1.0 - f) / 2.0) / self.font.count as f32;
+			row.x = (row.x * f + frame_idx) / self.font.count as f32;
 		}
 		let pos = Point::new(
 			self.pos.x + self.char_offset_px,

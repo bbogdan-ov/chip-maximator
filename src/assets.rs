@@ -1,7 +1,7 @@
 use crate::{
 	audio::SoundData,
 	math::Point,
-	painter::{CharWidth, Font, FontLookup, MAX_CHARS, Painter, Texture, TextureOpts},
+	painter::{Font, FontLookup, MAX_CHARS, Painter, START_CHAR, Texture, TextureOpts},
 };
 
 /// Asset texture
@@ -117,72 +117,78 @@ macro_rules! assets {
 	};
 }
 
-fn simple_font_lookup() -> [u8; MAX_CHARS] {
-	let upper_a_z: [u8; 26] = std::array::from_fn(|i| i as u8);
-	let numbers: [u8; 10] = std::array::from_fn(|i| i as u8);
-
+/// Basic indices lookup table for fonts with latin letters and some symbols
+fn basic_font_lookup() -> [u8; MAX_CHARS] {
 	let mut lookup = [0; MAX_CHARS];
 
-	// Skip the first blank char
-	let mut offset = 1_u8;
+	let mut offset: u8 = 1; // 1 to skip the first blank char
 
-	// A-Z
-	lookup[65..=90].copy_from_slice(&upper_a_z.map(|n| n + offset));
-	offset += 26;
-	// a-z
-	lookup[97..=122].copy_from_slice(&upper_a_z.map(|n| n + offset));
-	offset += 26;
-	// 0-9
-	lookup[48..=57].copy_from_slice(&numbers.map(|n| n + offset));
-	offset += 10;
-	// .
-	lookup[46] = offset;
-	offset += 1;
-	// ,
-	lookup[44] = offset;
-	offset += 1;
-	// -
-	lookup[45] = offset;
-	offset += 1;
-	// !
-	lookup[33] = offset;
-	offset += 1;
-	// ?
-	lookup[63] = offset;
-	offset += 1;
-	// /
-	lookup[47] = offset;
-	offset += 1;
-	// #
-	lookup[35] = offset;
+	macro_rules! make_lookup {
+		($($start:expr, $end:expr;)*) => {
+			$({
+				let start = $start as usize - START_CHAR as usize;
+				let end = $end as usize - START_CHAR as usize;
+				for i in start..=end {
+					lookup[i] = offset;
+					offset += 1;
+				}
+			})*
+		};
+	}
+
+	make_lookup! {
+		'A', 'Z';
+		'a', 'z';
+		'0', '9';
+		'.', '.';
+		',', ',';
+		'-', '-';
+		'!', '!';
+		'?', '?';
+		'/', '/';
+		'#', '#';
+		'(', '(';
+		')', ')';
+	}
 
 	lookup
 }
+
+macro_rules! make_widths {
+	($($ch:expr, $width:expr;)*) => {{
+		let mut widths: [u8; MAX_CHARS] = [10; MAX_CHARS];
+		$(widths[$ch as usize - b' ' as usize] = $width;)*
+		widths
+	}};
+}
+
 fn serif_font_lookup() -> FontLookup {
-	let lookup = simple_font_lookup();
-	let mut widths = [CharWidth::Normal; MAX_CHARS];
+	let widths = make_widths! {
+		' ',10;
+		'A',26; 'B',22; 'C',20; 'D',24; 'E',22; 'F',20; 'G',27; 'H',27; 'I',14; 'J',16; 'K',25; 'L',21; 'M',26; 'N',26; 'O',24; 'P',20; 'Q',24; 'R',24; 'S',18; 'T',22; 'U',26; 'V',25; 'W',25; 'X',24; 'Y',24; 'Z',20;
+		'a',19; 'b',21; 'c',17; 'd',22; 'e',18; 'f',16; 'g',20; 'h',23; 'i',13; 'j',12; 'k',22; 'l',13; 'm',26; 'n',22; 'o',19; 'p',22; 'q',22; 'r',17; 's',16; 't',14; 'u',23; 'v',22; 'w',27; 'x',22; 'y',22; 'z',17;
+		'0',20; '1',18; '2',19; '3',19; '4',22; '5',19; '6',20; '7',20; '8',20; '9',19;
+		'.',8;  ';',11; '-',14; '!',9;  '?',17; '/',11; '#',19; '(',12; ')',12;
+	};
 
-	for byte in b" iljf-,.!?/".iter() {
-		widths[*byte as usize] = CharWidth::Half;
+	FontLookup::Custom {
+		indices: basic_font_lookup(),
+		widths,
 	}
-	for byte in b"IJESCcrytpeaougs0123456789".iter() {
-		widths[*byte as usize] = CharWidth::ThreeQuarters;
-	}
-
-	FontLookup::Custom(lookup, widths)
 }
 fn w98_font_lookup() -> FontLookup {
-	let lookup = simple_font_lookup();
-	let mut widths = [CharWidth::Normal; MAX_CHARS];
+	let widths = make_widths! {
+		' ',3;
+		'A',8; 'B',6; 'C',7; 'D',7; 'E',6; 'F',6; 'G',7; 'H',7; 'I',2; 'J',5; 'K',7; 'L',6; 'M',8; 'N',7; 'O',7; 'P',7; 'Q',7; 'R',7; 'S',7; 'T',6; 'U',7; 'V',8; 'W',12; 'X',8; 'Y',8; 'Z',8;
+		'a',6; 'b',6; 'c',6; 'd',6; 'e',6; 'f',3; 'g',6; 'h',6; 'i',2; 'j',2; 'k',6; 'l',2; 'm',8; 'n',6; 'o',6; 'p',6; 'q',6; 'r',3; 's',5; 't',3; 'u',6; 'v',6; 'w',8;  'x',5; 'y',6; 'z',5;
+		'0',6; '1',4; '2',6; '3',6; '4',6; '5',6; '6',6; '7',6; '8',6; '9',6;
+		'.',2; ';',3; '-',3; '!',2; '?',6; '/',5; '#',7; '(',3; ')',3;
+	};
 
-	for byte in b" abcdefghkjltrIinopqsuvxyz.,-!/".iter() {
-		widths[*byte as usize] = CharWidth::Half;
+	FontLookup::Custom {
+		indices: basic_font_lookup(),
+		widths,
 	}
-	for byte in b"ABCDEFGJKLMNOPQRSTUVXYZ0123456789mb?".iter() {
-		widths[*byte as usize] = CharWidth::ThreeQuarters;
-	}
-
-	FontLookup::Custom(lookup, widths)
 }
 
 assets! {
@@ -225,9 +231,9 @@ assets! {
 		icons => "icons", 32, 32, 4, 4,
 	}
 	fonts {
-		ibm_font => "ibm-font", 8, 8, 256, false, FontLookup::Ascii,
+		ibm_font => "ibm-font", 8, 8, 256, false, FontLookup::Monospace256,
 		serif_font => "serif-font", 26, 40, 72, true, {serif_font_lookup()},
-		w98_font => "w98-font", 12, 14, 70, false, {w98_font_lookup()},
+		w98_font => "w98-font", 12, 14, 72, false, {w98_font_lookup()},
 	}
 	sounds {
 		key_press_1_sound => "key-press-1",
