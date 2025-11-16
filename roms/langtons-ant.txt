@@ -1,2 +1,3 @@
-Langtons Ant, but you can control it
+Langtons Ant, but you can
+control it
 TODO:

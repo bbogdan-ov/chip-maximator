@@ -1,4 +1,5 @@
 Outlaw game description!
 TODO:
 
-No author, taken from Octo examples
+No author, taken from
+Octo examples
