@@ -1,6 +1,8 @@
 use crate::{
 	app::{AppContext, CANVAS_HEIGHT, CANVAS_WIDTH},
-	assets::{DIGIT_LETTERS, LOWER_ALPHA_LETTERS, SYMBOL_LETTERS, UPPER_ALPHA_LETTERS},
+	assets::{
+		BASIC_FONT_LETTERS, DIGIT_LETTERS, LOWER_ALPHA_LETTERS, SYMBOL_LETTERS, UPPER_ALPHA_LETTERS,
+	},
 	games::{GAMES, GameInfo},
 	math::{Color, Point, Rect, ToStrBytes},
 	painter::{CanvasId, Sprite, Text},
@@ -68,6 +70,8 @@ pub struct Description {
 	char_idx: usize,
 	was_typing_newlines: bool,
 
+	cur_game: Option<&'static GameInfo>,
+
 	typing_timer: Timer,
 	cursor_blink_timer: Timer,
 }
@@ -84,6 +88,8 @@ impl Description {
 			typo_len: 0,
 			char_idx: 0,
 			was_typing_newlines: false,
+
+			cur_game: None,
 
 			typing_timer: Timer::from_millis(100),
 			cursor_blink_timer: Timer::from_millis(300),
@@ -114,7 +120,11 @@ impl Description {
 
 		if copy_next_chars {
 			let idx = self.char_idx + self.typo_len;
-			typo_char = game.desc.as_bytes()[idx];
+			if let Some(ch) = game.desc.as_bytes().get(idx) {
+				typo_char = *ch;
+			} else {
+				typo_char = rand_char(BASIC_FONT_LETTERS, next_char);
+			}
 		} else if next_char.is_ascii_uppercase() {
 			typo_char = rand_char(UPPER_ALPHA_LETTERS, next_char);
 		} else if next_char.is_ascii_lowercase() {
@@ -134,7 +144,11 @@ impl Description {
 		self.writer_state = WriterState::Typing;
 	}
 
-	fn update_typing(&mut self, game: &GameInfo) {
+	fn update_typing(&mut self) {
+		let Some(game) = self.cur_game else {
+			return;
+		};
+
 		if self.writer_state == WriterState::Nothing || !self.typing_timer.finished() {
 			return;
 		}
@@ -162,21 +176,21 @@ impl Description {
 				self.start_typing_timer(2);
 			}
 			WriterState::Typing if should_typo => {
-				let mut len: usize;
-				let one_bad = quad_rand::rand() % 100 <= 60;
+				let len: usize;
+				let one_bad_letter = quad_rand::rand() % 100 <= 80;
 
 				if next_char.is_ascii_alphabetic() {
-					len = quad_rand::gen_range(1, MAX_TYPO_LEN);
+					if one_bad_letter {
+						len = quad_rand::gen_range(1, MAX_TYPO_LEN);
+					} else {
+						len = quad_rand::gen_range(1, 3);
+					}
 				} else {
 					len = 1;
 				}
 
-				if one_bad {
-					len = usize::min(self.char_idx + len, game.desc.len()) - self.char_idx;
-				}
-
 				self.writer_state = WriterState::MakingTypo {
-					one_bad_letter: one_bad,
+					one_bad_letter,
 					len,
 				};
 				self.start_typing_timer(1);
@@ -195,14 +209,13 @@ impl Description {
 				one_bad_letter,
 				len,
 			} => {
-				let copy_next = !*one_bad_letter;
-				*one_bad_letter = false;
+				let one_bad = *one_bad_letter;
 
 				if self.typo_len >= *len {
 					self.writer_state = WriterState::ErasingTypo;
 					self.start_typing_timer(6);
 				} else {
-					self.advance_typo(game, next_char, copy_next);
+					self.advance_typo(game, next_char, one_bad && self.typo_len > 1);
 					self.start_typing_timer(1);
 				}
 			}
@@ -223,16 +236,21 @@ impl Description {
 		self.typing_timer.update(&ctx.time);
 		self.cursor_blink_timer.update(&ctx.time);
 
-		let Some(equiped_idx) = picker.equiped_idx else {
-			return;
-		};
-		let equiped_game = &GAMES[equiped_idx];
+		if picker.just_equipped {
+			let Some(equiped_idx) = picker.equiped_idx else {
+				return;
+			};
 
-		if picker.just_equipped && !equiped_game.desc.is_empty() {
+			let game = &GAMES[equiped_idx];
+			if game.desc.is_empty() {
+				return;
+			}
+
+			self.cur_game = Some(game);
 			self.start_typing();
 		}
 
-		self.update_typing(equiped_game);
+		self.update_typing();
 	}
 
 	pub fn draw(&mut self, ctx: &mut AppContext, canvas: CanvasId, picker: &PickerState) {
