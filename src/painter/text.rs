@@ -46,9 +46,9 @@ pub struct Text<'a> {
 	pub background: Color,
 
 	/// First char offset in pixels
-	char_offset_px: f32,
+	pub char_offset_px: f32,
 	/// Current line offset in chars
-	line_offset: f32,
+	pub line_offset: f32,
 }
 impl<'a> Text<'a> {
 	pub fn new(font: &'a Font) -> Self {
