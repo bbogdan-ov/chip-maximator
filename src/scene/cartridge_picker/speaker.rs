@@ -243,13 +243,13 @@ impl Speaker {
 
 		// Draw smol display text
 		if let Some(idx) = state.equiped_idx {
-			let clip = Rect::new_xywh(win_pos.x + 108.0, win_pos.y + 11.0, 123.0, 14.0);
+			let rect = Rect::new_xywh(win_pos.x + 108.0, win_pos.y + 11.0, 123.0, 14.0);
 
-			ctx.painter.set_clip(Some(clip));
+			ctx.painter.set_clip(Some(rect));
 
 			let game = &GAMES[idx];
 			let mut text = Text::new(&ctx.assets.w98_font)
-				.with_pos(clip.pos + Point::new(2.0, 0.0))
+				.with_pos(rect.pos + Point::new(2.0, 0.0))
 				.with_fg(Color::new(0.0, 1.0, 0.0))
 				.with_bg(Color::TRANSPARENT);
 
