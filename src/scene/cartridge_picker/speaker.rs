@@ -226,6 +226,8 @@ impl Speaker {
 	}
 
 	pub fn draw(&mut self, ctx: &mut AppContext, canvas: CanvasId, state: &PickerState) {
+		const SCREEN_SIZE: Point = Point::new(220.0, 220.0);
+
 		let mut win_pos = Self::POS;
 
 		if self.state == SpeakerState::Suffering {
@@ -241,7 +243,7 @@ impl Speaker {
 
 		// Draw smol display text
 		if let Some(idx) = state.equiped_idx {
-			let clip = Rect::new_xywh(win_pos.x + 144.0, win_pos.y + 11.0, 123.0, 14.0);
+			let clip = Rect::new_xywh(win_pos.x + 108.0, win_pos.y + 11.0, 123.0, 14.0);
 
 			ctx.painter.set_clip(Some(clip));
 
@@ -306,7 +308,7 @@ impl Speaker {
 
 		ctx.painter.set_clip(Some(Rect::new(
 			win_pos + Point::new(27.0, 32.0),
-			(256.0, 256.0).into(),
+			SCREEN_SIZE,
 		)));
 
 		// Draw window grid
@@ -322,7 +324,7 @@ impl Speaker {
 			.with_frame((self.cur_frame, 0))
 			.with_pos((
 				(win_pos.x + win_size.x / 2.0 - speaker_size.x / 2.0).floor(),
-				win_pos.y + 78.0,
+				win_pos.y + win_size.y - 22.0 - speaker_size.y,
 			))
 			.draw(&mut ctx.painter, canvas);
 
