@@ -131,7 +131,7 @@ impl<'a> Text<'a> {
 				frame_idx = byte as f32;
 			}
 			FontLookup::Custom { widths, indices } => {
-				let idx = (byte - START_CHAR) as usize;
+				let idx = byte.saturating_sub(START_CHAR) as usize;
 				frame_idx = indices[idx] as f32;
 				kerning = widths[idx] as f32 * self.font_size;
 			}
