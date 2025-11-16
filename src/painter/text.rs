@@ -91,22 +91,49 @@ impl<'a> Text<'a> {
 		);
 	}
 
+	pub fn measure_chars(&mut self, bytes: &[u8]) -> f32 {
+		let mut width = 0.0;
+
+		for byte in bytes {
+			if *byte == 0 {
+				continue;
+			}
+
+			let kerning: f32;
+			match self.font.lookup {
+				FontLookup::Monospace256 => {
+					kerning = self.char_size().x;
+				}
+				FontLookup::Custom { widths, .. } => {
+					let idx = (byte - START_CHAR) as usize;
+					kerning = widths[idx] as f32 * self.font_size;
+				}
+			};
+
+			width += kerning.floor();
+		}
+
+		width
+	}
+
 	pub fn draw_char(&mut self, painter: &mut Painter, byte: u8, offset: Point) {
 		if byte == 0 {
 			return;
 		}
 
 		let size = self.char_size();
-		let mut kerning = size.x;
-		let frame_idx: f32;
 
+		let mut kerning: f32;
+		let frame_idx: f32;
 		match self.font.lookup {
 			FontLookup::Monospace256 => {
+				kerning = size.x;
 				frame_idx = byte as f32;
 			}
-			FontLookup::Custom { indices, widths } => {
-				frame_idx = indices[(byte - START_CHAR) as usize] as f32;
-				kerning = widths[(byte - START_CHAR) as usize] as f32 * self.font_size;
+			FontLookup::Custom { widths, indices } => {
+				let idx = (byte - START_CHAR) as usize;
+				frame_idx = indices[idx] as f32;
+				kerning = widths[idx] as f32 * self.font_size;
 			}
 		};
 
