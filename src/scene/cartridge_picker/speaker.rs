@@ -2,6 +2,7 @@ use std::time::Duration;
 
 use crate::{
 	app::{AppContext, CANVAS_WIDTH},
+	assets::BASIC_FONT_LETTERS,
 	emu::Emu,
 	games::GAMES,
 	math::{Color, Point, Rect},
@@ -256,16 +257,13 @@ impl Speaker {
 			text.begin_draw(&mut ctx.painter, canvas);
 			let bytes = game.title.as_bytes();
 			for (idx, byte) in bytes.iter().enumerate() {
-				const LETTERS: &str =
-					"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789.,-!?/#";
-
 				let f = idx as f32 / bytes.len() as f32;
 
 				let b = if f <= self.title_tween.value {
 					*byte
 				} else {
-					let i = (ctx.time.elapsed as usize * idx) % LETTERS.len();
-					LETTERS.as_bytes()[i]
+					let i = (ctx.time.elapsed as usize * idx) % BASIC_FONT_LETTERS.len();
+					BASIC_FONT_LETTERS.as_bytes()[i]
 				};
 
 				text.draw_char(&mut ctx.painter, b, Point::default());

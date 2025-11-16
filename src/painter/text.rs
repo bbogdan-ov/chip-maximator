@@ -190,10 +190,10 @@ impl<'a> Text<'a> {
 		self.char_offset_px = 0.0;
 		self
 	}
-	pub fn draw_str(&mut self, painter: &mut Painter, canvas: CanvasId, s: &str) -> &mut Self {
+	pub fn draw_str(&mut self, painter: &mut Painter, canvas: CanvasId, s: &[u8]) -> &mut Self {
 		self.begin_draw(painter, canvas);
 
-		for byte in s.as_bytes() {
+		for byte in s {
 			if *byte == b'\n' {
 				self.new_line();
 			} else {

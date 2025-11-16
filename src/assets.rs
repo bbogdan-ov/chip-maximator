@@ -117,6 +117,13 @@ macro_rules! assets {
 	};
 }
 
+pub const BASIC_FONT_LETTERS: &str =
+	"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789.,-!?/#()";
+pub const UPPER_ALPHA_LETTERS: &str = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+pub const LOWER_ALPHA_LETTERS: &str = "abcdefghijklmnopqrstuvwxyz";
+pub const DIGIT_LETTERS: &str = "0123456789";
+pub const SYMBOL_LETTERS: &str = ".,-!?/#()";
+
 /// Basic indices lookup table for fonts with latin letters and some symbols
 fn basic_font_lookup() -> [u8; MAX_CHARS] {
 	let mut lookup = [0; MAX_CHARS];

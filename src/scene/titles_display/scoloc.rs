@@ -724,7 +724,7 @@ impl Scoloc {
 			.with_pos((6.0, PADDING - scroll))
 			.with_font_size(FONT_SIZE)
 			.with_bg(Color::TRANSPARENT)
-			.draw_str(&mut ctx.painter, canvas, RULES);
+			.draw_str(&mut ctx.painter, canvas, RULES.as_bytes());
 	}
 
 	fn paused(&self) -> bool {

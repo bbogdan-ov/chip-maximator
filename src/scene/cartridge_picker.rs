@@ -67,7 +67,7 @@ pub struct CartridgePicker {
 
 	carousel: Carousel,
 	speaker: Speaker,
-	desc: Description,
+	description: Description,
 
 	spot_tween: Tweenable,
 }
@@ -81,7 +81,7 @@ impl CartridgePicker {
 
 			carousel: Carousel::new(ctx),
 			speaker: Speaker::new(),
-			desc: Description::new(),
+			description: Description::new(),
 
 			spot_tween: Tweenable::default(),
 		}
@@ -143,6 +143,7 @@ impl CartridgePicker {
 		}
 
 		self.speaker.update(ctx, state, &self.state);
+		self.description.update(ctx, &self.state);
 
 		self.state.just_grabbed = false;
 		self.state.just_dropped = false;
@@ -168,7 +169,7 @@ impl CartridgePicker {
 			.draw(&mut ctx.painter, canvas);
 
 		self.speaker.draw(ctx, canvas, &self.state);
-		self.desc.draw(ctx, canvas, &self.state);
+		self.description.draw(ctx, canvas, &self.state);
 		self.carousel.draw(ctx, canvas);
 
 		self.begin_consume(ctx);
