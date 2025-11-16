@@ -22,11 +22,6 @@ impl Description {
 			.with_pos(Self::POS)
 			.draw(&mut ctx.painter, canvas);
 
-		// Draw scroll thumb
-		Sprite::from(&ctx.assets.description_thumb)
-			.with_pos(Self::POS + Point::new(280.0, 22.0))
-			.draw(&mut ctx.painter, canvas);
-
 		// Draw diode
 		Sprite::from(&ctx.assets.description_diode)
 			.with_pos(Self::POS + Point::new(274.0, 0.0))

@@ -223,7 +223,6 @@ assets! {
 		speaker_grid => "speaker-grid", 256, 128, 1, 1,
 		speaker_button => "speaker-button", 24, 16, 2, 2,
 		description_window => "description-window", 300, 300, 1, 1,
-		description_thumb => "description-thumb", 16, 42, 1, 1,
 		description_diode => "description-diode", 26, 26, 1, 1,
 
 		explosion => "explosion", 175, 175, 16, 1,
