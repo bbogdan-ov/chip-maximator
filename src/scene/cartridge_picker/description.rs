@@ -1,8 +1,6 @@
 use crate::{
 	app::{AppContext, CANVAS_HEIGHT, CANVAS_WIDTH},
-	assets::{
-		BASIC_FONT_LETTERS, DIGIT_LETTERS, LOWER_ALPHA_LETTERS, SYMBOL_LETTERS, UPPER_ALPHA_LETTERS,
-	},
+	assets::{DIGIT_LETTERS, LOWER_ALPHA_LETTERS, SYMBOL_LETTERS, UPPER_ALPHA_LETTERS},
 	games::{GAMES, GameInfo},
 	math::{Color, Point, Rect, ToStrBytes},
 	painter::{CanvasId, Sprite, Text},
@@ -72,7 +70,6 @@ pub struct Description {
 	was_typing_newlines: bool,
 
 	cur_game_idx: Option<usize>,
-	next_game_idx: Option<usize>,
 
 	typing_timer: Timer,
 	cursor_blink_timer: Timer,
@@ -92,7 +89,6 @@ impl Description {
 			was_typing_newlines: false,
 
 			cur_game_idx: None,
-			next_game_idx: None,
 
 			typing_timer: Timer::from_millis(100),
 			cursor_blink_timer: Timer::from_millis(300),
@@ -126,7 +122,7 @@ impl Description {
 			if let Some(ch) = game.desc.as_bytes().get(idx) {
 				typo_char = *ch;
 			} else {
-				typo_char = rand_char(BASIC_FONT_LETTERS, next_char);
+				typo_char = rand_char(LOWER_ALPHA_LETTERS, next_char);
 			}
 		} else if next_char.is_ascii_uppercase() {
 			typo_char = rand_char(UPPER_ALPHA_LETTERS, next_char);
@@ -161,7 +157,7 @@ impl Description {
 		self.start_typing_timer(8);
 	}
 
-	fn update_typing(&mut self) {
+	fn update_typing(&mut self, picker: &PickerState) {
 		let Some(game_idx) = self.cur_game_idx else {
 			return;
 		};
@@ -182,12 +178,13 @@ impl Description {
 				self.writer_state = WriterState::Nothing;
 				self.cur_game_idx = None;
 
-				if let Some(next_idx) = self.next_game_idx {
-					self.start_typing(next_idx);
+				if let Some(equiped_idx) = picker.equiped_idx {
+					self.start_typing(equiped_idx);
 					self.start_typing_timer(10);
 				}
 			}
 
+			self.cursor_blink_timer.start();
 			return;
 		}
 
@@ -285,18 +282,16 @@ impl Description {
 					self.writer_state = WriterState::Typing;
 					self.start_typing_timer(10);
 				} else {
-					self.next_game_idx = Some(equiped_idx);
 					self.erase_everything();
 				}
 			} else {
 				self.start_typing(equiped_idx);
 			}
-		}
-		if picker.just_unequipped {
+		} else if picker.just_unequipped {
 			self.erase_everything();
 		}
 
-		self.update_typing();
+		self.update_typing(picker);
 	}
 
 	pub fn draw(&mut self, ctx: &mut AppContext, canvas: CanvasId) {
@@ -343,63 +338,62 @@ impl Description {
 			ctx.painter.set_clip(None);
 		}
 
+		let text_pos = Self::POS + Point::new(12.0, 33.0);
+		let mut num_lines: u32 = 0;
+		let mut num_chars: u32 = 0;
+		let mut cursor_pos = text_pos;
+
 		if let Some(game_idx) = self.cur_game_idx {
 			let game = &GAMES[game_idx];
 
 			// Draw text
 			let mut text = Text::new(&ctx.assets.serif_font)
-				.with_pos(Self::POS + Point::new(12.0, 33.0))
+				.with_pos(text_pos)
 				.with_font_size(0.5)
 				.with_fg(Color::BLACK)
 				.with_bg(Color::TRANSPARENT);
+			let desc_text_slice = game.desc[..self.char_idx].as_bytes();
 
-			text.draw_str(
-				&mut ctx.painter,
-				canvas,
-				game.desc[..self.char_idx].as_bytes(),
-			);
+			text.draw_str(&mut ctx.painter, canvas, desc_text_slice);
 
 			if self.typo_len > 0 {
 				text.draw_str(&mut ctx.painter, canvas, &self.typo[..self.typo_len]);
 			}
 
-			// Draw text cursor
-			if !self.cursor_blink_timer.finished() || ctx.time.elapsed % 60 < 30 {
-				let char_size = text.char_size();
-				let pos = Point::new(
-					text.pos.x + text.char_offset_px,
-					text.pos.y + text.line_offset * char_size.y,
-				);
+			let char_size = text.char_size();
+			cursor_pos = Point::new(
+				text.pos.x + text.char_offset_px,
+				text.pos.y + text.line_offset * char_size.y,
+			);
 
-				Sprite::new(
-					ctx.painter.white_texture,
-					Point::new(2.0, char_size.y - 4.0),
-				)
+			num_lines = text.line_offset as u32;
+			num_chars = desc_text_slice.len() as u32 + self.typo_len as u32;
+		}
+
+		// Draw text cursor
+		if !self.cursor_blink_timer.finished() || ctx.time.elapsed % 60 < 30 {
+			Sprite::new(ctx.painter.white_texture, Point::new(2.0, 18.0))
 				.with_fg(Color::BLACK)
-				.with_pos(pos)
+				.with_pos(cursor_pos)
 				.draw(&mut ctx.painter, canvas);
-			}
+		}
 
-			let num_lines = text.line_offset as u32;
-			let num_chars = game.desc.len() as u32;
+		// Draw footer text
+		{
+			let mut text = Text::new(&ctx.assets.w98_font)
+				.with_fg(Color::BLACK)
+				.with_bg(Color::TRANSPARENT)
+				.with_pos(Self::POS + Point::new(6.0, 280.0));
 
-			// Draw footer text
-			{
-				let mut text = Text::new(&ctx.assets.w98_font)
-					.with_fg(Color::BLACK)
-					.with_bg(Color::TRANSPARENT)
-					.with_pos(Self::POS + Point::new(6.0, 280.0));
+			// Lines number
+			text.draw_chars(&mut ctx.painter, canvas, &num_lines.to_str_bytes())
+				.draw_chars(&mut ctx.painter, canvas, b" line(s)");
 
-				// Lines number
-				text.draw_chars(&mut ctx.painter, canvas, &num_lines.to_str_bytes())
-					.draw_chars(&mut ctx.painter, canvas, b" line(s)");
-
-				// Chars number
-				text.char_offset_px = 0.0;
-				text.pos.x = Self::POS.x + 90.0;
-				text.draw_chars(&mut ctx.painter, canvas, &num_chars.to_str_bytes())
-					.draw_chars(&mut ctx.painter, canvas, b" char(s)");
-			}
+			// Chars number
+			text.char_offset_px = 0.0;
+			text.pos.x = Self::POS.x + 90.0;
+			text.draw_chars(&mut ctx.painter, canvas, &num_chars.to_str_bytes())
+				.draw_chars(&mut ctx.painter, canvas, b" char(s)");
 		}
 	}
 
