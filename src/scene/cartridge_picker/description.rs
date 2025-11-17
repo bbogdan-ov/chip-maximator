@@ -251,7 +251,7 @@ impl Description {
 					self.writer_state = WriterState::ErasingTypo;
 					self.start_typing_timer(6);
 				} else {
-					self.advance_typo(game, next_char, one_bad && self.typo_len > 1);
+					self.advance_typo(game, next_char, one_bad && self.typo_len >= 1);
 					self.start_typing_timer(1);
 				}
 			}
