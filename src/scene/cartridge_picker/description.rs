@@ -119,8 +119,11 @@ impl Description {
 	}
 
 	fn start_typing_timer(&mut self, scale: u64) {
-		let millis = quad_rand::gen_range::<u64>(20, 60);
-		self.typing_timer.start_millis(millis * scale);
+		self.start_typing_timer_from_to(20 * scale, 60 * scale);
+	}
+	fn start_typing_timer_from_to(&mut self, low: u64, high: u64) {
+		let millis = quad_rand::gen_range::<u64>(low, high);
+		self.typing_timer.start_millis(millis);
 	}
 
 	fn advance_typing(&mut self) {
@@ -190,28 +193,9 @@ impl Description {
 			return;
 		}
 
-		if self.writer_state == WriterState::ErasingEverything {
-			if self.typo_len > 0 {
-				self.typo_len -= 1;
-				self.start_typing_timer(1);
-			} else if self.char_idx > 0 {
-				self.char_idx -= 1;
-				self.start_typing_timer(1);
-			} else {
-				self.writer_state = WriterState::Nothing;
-				self.cur_game_idx = None;
-
-				if let Some(equiped_idx) = picker.equiped_idx {
-					self.start_typing(equiped_idx);
-					self.start_typing_timer(10);
-				}
-			}
-
-			self.cursor_blink_timer.start();
-			return;
-		}
-
-		if self.char_idx + 1 >= game.desc.len() {
+		if self.writer_state != WriterState::ErasingEverything
+			&& self.char_idx + 1 >= game.desc.len()
+		{
 			self.writer_state = WriterState::Nothing;
 			return;
 		}
@@ -223,7 +207,6 @@ impl Description {
 
 		match &mut self.writer_state {
 			WriterState::Nothing => unreachable!(),
-			WriterState::ErasingEverything => unreachable!(),
 
 			WriterState::Typing if next_char == b'\n' => {
 				self.advance_typing();
@@ -235,7 +218,7 @@ impl Description {
 				self.start_typing_timer(2);
 			}
 			WriterState::Typing if should_typo => {
-				let len: usize;
+				let mut len: usize;
 				let one_bad_letter = quad_rand::rand() % 100 <= 80;
 
 				if next_char.is_ascii_alphabetic() {
@@ -247,6 +230,8 @@ impl Description {
 				} else {
 					len = 1;
 				}
+
+				len = usize::min(self.char_idx + len, game.desc.len()) - self.char_idx;
 
 				self.writer_state = WriterState::MakingTypo {
 					one_bad_letter,
@@ -287,6 +272,26 @@ impl Description {
 					self.typo_len -= 1;
 					self.start_typing_timer(2);
 				}
+			}
+
+			WriterState::ErasingEverything => {
+				self.start_typing_timer_from_to(10, 40);
+
+				if self.typo_len > 0 {
+					self.typo_len -= 1;
+				} else if self.char_idx > 0 {
+					self.char_idx -= 1;
+				} else {
+					self.writer_state = WriterState::Nothing;
+					self.cur_game_idx = None;
+
+					if let Some(equiped_idx) = picker.equiped_idx {
+						self.start_typing(equiped_idx);
+						self.start_typing_timer(10);
+					}
+				}
+
+				self.cursor_blink_timer.start();
 			}
 		}
 	}
@@ -421,6 +426,6 @@ impl Description {
 	}
 
 	fn next_char(&self, game: &GameInfo) -> u8 {
-		game.desc.as_bytes()[self.char_idx + 1]
+		game.desc.as_bytes()[self.char_idx]
 	}
 }
