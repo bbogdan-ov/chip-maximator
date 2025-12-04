@@ -20,7 +20,7 @@ use game_display::GameDisplay;
 use instuction_leds::InstuctionLeds;
 use keyboard::Keyboard;
 use links::Links;
-use miniquad::{CursorIcon, KeyCode, MouseButton, window};
+use miniquad::{CursorIcon, MouseButton, window};
 use movie_display::MovieDisplay;
 use registers_display::RegistersDisplay;
 use reset_button::ResetButton;
@@ -54,8 +54,9 @@ enum BoardAnim {
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 enum Action {
 	TogglePower,
+	OpenPicker,
 	SetAnim(BoardAnim),
-	Reset,
+	ResetState,
 }
 
 fn new_buzz_sound(_ctx: &mut AppContext) -> Sound {
@@ -86,6 +87,7 @@ pub struct Scene {
 
 	flip_timeline: Timeline<Action>,
 	explode_timeline: Timeline<Action>,
+	picker_timeline: Timeline<Action>,
 
 	flip_anim: AnimRef,
 	fall_anim: AnimRef,
@@ -128,13 +130,18 @@ impl Scene {
 		let explode_timeline = Timeline::new([
 			K::sound(ctx.assets.explosion_sound),
 			K::anim(explosion_anim.clone(), AnimWait::Frame(3)),
-			K::action(Action::Reset),
+			K::action(Action::ResetState),
 			K::action(Action::SetAnim(BoardAnim::Falling)),
 			K::delay(1500),
 			K::sound(ctx.assets.fall_sound),
 			K::delay(500),
 			K::anim(fall_anim.clone(), AnimWait::Finish),
 			K::action(Action::SetAnim(BoardAnim::Front)),
+		]);
+
+		let picker_timeline = Timeline::new([
+			K::action(Action::TogglePower),
+			K::action(Action::OpenPicker),
 		]);
 
 		let whistle_sound = ctx
@@ -153,6 +160,7 @@ impl Scene {
 
 			flip_timeline,
 			explode_timeline,
+			picker_timeline,
 
 			flip_anim,
 			fall_anim,
@@ -201,10 +209,22 @@ impl Scene {
 
 		self.picker.update(ctx, state);
 
-		// Consume input when any board anim is playing
+		if self.cur_board_anim == BoardAnim::Front {
+			const PICKER_OPEN_TRIGGER: Rect = Rect::new_xywh(550.0, 110.0, 110.0, 80.0);
+			if PICKER_OPEN_TRIGGER.contains(&ctx.input.mouse_pos) {
+				ctx.input.cursor_icon = CursorIcon::Pointer;
+				if ctx.input.mouse_just_pressed(MouseButton::Left) {
+					self.picker_timeline.play(false);
+				}
+			}
+		}
+
+		// Consume input when any timeline is playing
 		ctx.input.consume(
 			InputConsume::BOARD_ANIM,
-			self.flip_timeline.playing || self.explode_timeline.playing,
+			self.flip_timeline.playing
+				|| self.explode_timeline.playing
+				|| self.picker_timeline.playing,
 		);
 	}
 	fn update_boards(&mut self, ctx: &mut AppContext, state: &mut State) {
@@ -215,8 +235,7 @@ impl Scene {
 			BoardAnim::Falling => 0.0,
 		};
 
-		self.front_board
-			.update(ctx, state, &mut self.picker, 1.0 - back_factor);
+		self.front_board.update(ctx, state, 1.0 - back_factor);
 		self.back_board.update(ctx, back_factor);
 	}
 	fn update_emu(&mut self, state: &mut State) {
@@ -249,12 +268,16 @@ impl Scene {
 	fn update_timelines(&mut self, ctx: &mut AppContext, state: &mut State) {
 		self.flip_timeline.update(&ctx.time);
 		self.explode_timeline.update(&ctx.time);
+		self.picker_timeline.update(&ctx.time);
 
 		while let Some(action) = self.flip_timeline.next(ctx) {
 			self.handle_action(ctx, state, action, self.flip_timeline.reversed);
 		}
 		while let Some(action) = self.explode_timeline.next(ctx) {
 			self.handle_action(ctx, state, action, self.explode_timeline.reversed);
+		}
+		while let Some(action) = self.picker_timeline.next(ctx) {
+			self.handle_action(ctx, state, action, self.picker_timeline.reversed);
 		}
 	}
 
@@ -274,8 +297,9 @@ impl Scene {
 					state.board.switch_power(ctx, false);
 				}
 			}
+			Action::OpenPicker => self.picker.open(),
 			Action::SetAnim(anim) => self.cur_board_anim = anim,
-			Action::Reset => state.reset(),
+			Action::ResetState => state.reset(),
 		}
 	}
 
@@ -465,13 +489,7 @@ impl FrontBoard {
 		}
 	}
 
-	fn update(
-		&mut self,
-		ctx: &mut AppContext,
-		state: &mut State,
-		picker: &mut CartridgePicker,
-		factor: f32,
-	) {
+	fn update(&mut self, ctx: &mut AppContext, state: &mut State, factor: f32) {
 		if factor == 0.0 {
 			return;
 		}
@@ -480,14 +498,6 @@ impl FrontBoard {
 		self.game_display.update(ctx, state);
 		self.state_leds.update(ctx, state);
 		self.valve.update(ctx, state);
-
-		const PICKER_OPEN_TRIGGER: Rect = Rect::new_xywh(550.0, 110.0, 110.0, 80.0);
-		if PICKER_OPEN_TRIGGER.contains(&ctx.input.mouse_pos) {
-			ctx.input.cursor_icon = CursorIcon::Pointer;
-			if ctx.input.mouse_just_pressed(MouseButton::Left) {
-				picker.show();
-			}
-		}
 	}
 
 	fn draw(&mut self, ctx: &mut AppContext, state: &mut State, canvas: CanvasId) {

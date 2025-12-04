@@ -87,10 +87,10 @@ impl CartridgePicker {
 		}
 	}
 
-	pub fn show(&mut self) {
+	pub fn open(&mut self) {
 		self.visible = true;
 	}
-	pub fn hide(&mut self) {
+	pub fn close(&mut self) {
 		self.visible = false;
 	}
 
@@ -104,7 +104,7 @@ impl CartridgePicker {
 		self.end_consume(ctx);
 
 		if ctx.input.key_just_pressed(KeyCode::Escape) {
-			self.hide();
+			self.close();
 			return;
 		}
 
