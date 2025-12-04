@@ -201,10 +201,6 @@ impl Scene {
 
 		self.picker.update(ctx, state);
 
-		if cfg!(debug_assertions) && ctx.input.key_just_pressed(KeyCode::Enter) {
-			self.explode();
-		}
-
 		// Consume input when any board anim is playing
 		ctx.input.consume(
 			InputConsume::BOARD_ANIM,
