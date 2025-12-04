@@ -2,8 +2,6 @@ mod carousel;
 mod description;
 mod speaker;
 
-use std::time::Duration;
-
 use carousel::Carousel;
 use description::Description;
 use miniquad::KeyCode;
@@ -16,7 +14,6 @@ use crate::{
 	math::{Color, Point, Rect},
 	painter::{self, CanvasId, Sprite},
 	state::State,
-	util::{Easing, Tweenable},
 };
 
 /// Cartridge picker state
@@ -68,8 +65,6 @@ pub struct CartridgePicker {
 	carousel: Carousel,
 	speaker: Speaker,
 	description: Description,
-
-	spot_tween: Tweenable,
 }
 impl CartridgePicker {
 	const DROP_RECT: Rect = Rect::new_xywh(180.0, 80.0, 180.0, 180.0);
@@ -82,8 +77,6 @@ impl CartridgePicker {
 			carousel: Carousel::new(ctx),
 			speaker: Speaker::new(),
 			description: Description::new(),
-
-			spot_tween: Tweenable::default(),
 		}
 	}
 
@@ -99,8 +92,6 @@ impl CartridgePicker {
 			return;
 		}
 
-		self.spot_tween.update(&ctx.time);
-
 		self.end_consume(ctx);
 
 		if ctx.input.key_just_pressed(KeyCode::Escape) {
@@ -110,17 +101,9 @@ impl CartridgePicker {
 
 		self.carousel.update(ctx, &mut self.state);
 
-		if self.state.just_grabbed {
-			let dur = Duration::from_millis(200);
-			self.spot_tween.play(1.0, dur, Easing::InOutSine);
-		}
-
 		if self.state.just_dropped
 			&& let Some(card_idx) = self.state.dropped_idx
 		{
-			let dur = Duration::from_millis(400);
-			self.spot_tween.play(0.0, dur, Easing::InOutSine);
-
 			if Self::DROP_RECT.contains(&ctx.input.mouse_pos) {
 				self.state.equip(card_idx);
 
@@ -177,21 +160,11 @@ impl CartridgePicker {
 	fn draw_bg(&mut self, ctx: &mut AppContext, canvas: CanvasId) {
 		let size = Point::new(CANVAS_WIDTH, CANVAS_HEIGHT);
 
-		let mut pos = Point::default();
-
-		if let Some(idx) = self.state.dragging_idx {
-			pos = self.carousel.cards[idx].pos;
-		} else if let Some(idx) = self.state.dropped_idx {
-			pos = self.carousel.cards[idx].pos;
-		}
-
 		ctx.painter.set_uniforms(
 			Some(canvas),
 			Some((ctx.assets.titles_bg.id, ctx.painter.empty_texture)),
 			painter::BatchUniforms {
 				flags: painter::BatchFlag::PICKER_BG,
-				factor: self.spot_tween.value,
-				mouse_pos: pos / size,
 				..Default::default()
 			},
 		);

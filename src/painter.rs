@@ -45,6 +45,8 @@ pub struct BatchUniforms {
 	pub background: Color,
 
 	pub blend_mode: BlendMode,
+	/// Factor of something.
+	/// Based on the context of usage.
 	pub factor: f32,
 	/// Mouse position clamped to 0.0..=1.0
 	pub mouse_pos: Point,

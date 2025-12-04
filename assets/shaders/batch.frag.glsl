@@ -106,16 +106,8 @@ float never_1(float x) {
 vec4 render_picker_bg() {
 	vec2 mouse = vec2(u_mouse_pos.x, 1.0 - u_mouse_pos.y);
 
-	float x = never_1(mouse.x) * 0.4;
-	float circle = mix(1.0, circle(uv - vec2(x, mouse.y), 0.06) * 3.0, u_factor);
-	circle = clamp(circle, -1.0, 1.0);
 	float shadow = smoothstep(0.2, 0.4, uv.x);
-
-	float result = 0.0;
-	result = smin(circle, shadow, 0.3);
-	result = smoothstep(0.0, 0.5, result);
-
-	float a = dither4x4(gl_FragCoord.xy, result);
+	float a = dither4x4(gl_FragCoord.xy, shadow);
 	vec4 color = texture(u_texture1, vec2(uv.x, 1.0 - uv.y));
 	return vec4(color.rgb * a, 1.0);
 }
