@@ -99,14 +99,11 @@ impl<'a> Text<'a> {
 				continue;
 			}
 
-			let kerning: f32;
-			match self.font.lookup {
-				FontLookup::Monospace256 => {
-					kerning = self.char_size().x;
-				}
+			let kerning = match self.font.lookup {
+				FontLookup::Monospace256 => self.char_size().x,
 				FontLookup::Custom { widths, .. } => {
 					let idx = (byte - START_CHAR) as usize;
-					kerning = widths[idx] as f32 * self.font_size;
+					widths[idx] as f32 * self.font_size
 				}
 			};
 

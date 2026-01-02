@@ -103,14 +103,13 @@ impl CartridgePicker {
 
 		if self.state.just_dropped
 			&& let Some(card_idx) = self.state.dropped_idx
+			&& Self::DROP_RECT.contains(&ctx.input.mouse_pos)
 		{
-			if Self::DROP_RECT.contains(&ctx.input.mouse_pos) {
-				self.state.equip(card_idx);
+			self.state.equip(card_idx);
 
-				// Load cartridge
-				let game = &GAMES[card_idx];
-				state.emu.load(game.bytes);
-			}
+			// Load cartridge
+			let game = &GAMES[card_idx];
+			state.emu.load(game.bytes);
 		}
 
 		if self.state.just_unequipped {

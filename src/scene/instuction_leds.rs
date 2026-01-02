@@ -25,7 +25,7 @@ impl InstuctionLeds {
 		// Update current instuction every 2th frame
 		if !state.board.power {
 			self.ins = (0, 0);
-		} else if ctx.time.elapsed % 2 == 0 {
+		} else if ctx.time.elapsed.is_multiple_of(2) {
 			self.ins = state.emu.cur_ins;
 		}
 

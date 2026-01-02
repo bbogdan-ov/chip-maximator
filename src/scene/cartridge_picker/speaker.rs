@@ -145,7 +145,7 @@ impl Speaker {
 			}
 			SpeakerState::Talking => self.update_talking(ctx, state),
 			SpeakerState::Suffering => {
-				if ctx.time.elapsed % 2 == 0 {
+				if ctx.time.elapsed.is_multiple_of(2) {
 					self.cur_frame = quad_rand::gen_range(8, 15);
 				}
 				if self.suffering_timer.finished() {
@@ -212,7 +212,7 @@ impl Speaker {
 			let byte = program[self.cur_nibble_idx / 2];
 
 			self.cur_pronounce = 0;
-			self.cur_nibble = if self.cur_nibble_idx % 2 == 0 {
+			self.cur_nibble = if self.cur_nibble_idx.is_multiple_of(2) {
 				(byte & 0xf0) >> 4
 			} else {
 				byte & 0x0f

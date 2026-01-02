@@ -529,6 +529,7 @@ impl Scoloc {
 		self.draw_buttons(ctx, canvas, titles_ctx);
 	}
 
+	#[allow(clippy::manual_is_multiple_of)]
 	fn distort(&self, ctx: &mut AppContext) {
 		use quad_rand::rand;
 

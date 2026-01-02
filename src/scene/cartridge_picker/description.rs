@@ -380,7 +380,7 @@ impl Description {
 				.with_font_size(0.5)
 				.with_fg(Color::BLACK)
 				.with_bg(Color::TRANSPARENT);
-			let desc_text_slice = game.desc[..self.char_idx].as_bytes();
+			let desc_text_slice = &game.desc.as_bytes()[..self.char_idx];
 
 			text.draw_str(&mut ctx.painter, canvas, desc_text_slice);
 

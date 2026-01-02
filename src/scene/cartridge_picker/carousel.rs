@@ -288,7 +288,7 @@ impl Carousel {
 
 		// Sort sprites every 4th frame to reduce overhead
 		// This solution is kinda dumb, but it seems to work ok
-		if ctx.time.elapsed % 4 == 0 {
+		if ctx.time.elapsed.is_multiple_of(4) {
 			self.sort_cards();
 		}
 	}
