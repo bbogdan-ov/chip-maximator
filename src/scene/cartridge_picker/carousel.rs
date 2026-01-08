@@ -226,7 +226,7 @@ pub struct Carousel {
 	sounds_played: u8,
 }
 impl Carousel {
-	const HEIGHT: f32 = 300.0;
+	const HEIGHT: f32 = 280.0;
 	const POS: Point = Point::new(100.0, CANVAS_WIDTH / 2.0);
 	/// Angle between each cartridge sprite (in radians)
 	const ANGLE_BETWEEN: f32 = PI / (GAMES.len() as f32 / 2.0);

@@ -98,7 +98,7 @@ pub struct Description {
 	cursor_blink_timer: Timer,
 }
 impl Description {
-	const POS: Point = Point::new(CANVAS_WIDTH - 300.0 - 30.0, CANVAS_HEIGHT - 300.0 - 30.0);
+	const POS: Point = Point::new(CANVAS_WIDTH - 300.0 - 30.0, CANVAS_HEIGHT - 300.0 - 60.0);
 
 	pub fn new() -> Self {
 		Self {

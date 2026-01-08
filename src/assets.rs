@@ -231,6 +231,7 @@ assets! {
 		speaker_button => "speaker-button", 24, 16, 2, 2,
 		description_window => "description-window", 300, 300, 1, 1,
 		description_diode => "description-diode", 26, 26, 1, 1,
+		laptop_frame => "laptop-frame", 700, 700, 1, 1,
 
 		explosion => "explosion", 175, 175, 16, 1,
 

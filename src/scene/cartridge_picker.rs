@@ -154,10 +154,12 @@ impl CartridgePicker {
 		self.description.draw(ctx, canvas);
 		self.carousel.draw(ctx, canvas);
 
+		Sprite::from(&ctx.assets.laptop_frame).draw(&mut ctx.painter, canvas);
+
 		self.begin_consume(ctx);
 	}
 	fn draw_bg(&mut self, ctx: &mut AppContext, canvas: CanvasId) {
-		let size = Point::new(CANVAS_WIDTH, CANVAS_HEIGHT);
+		let size = Point::new(CANVAS_WIDTH - 3.0, CANVAS_HEIGHT);
 
 		ctx.painter.set_uniforms(
 			Some(canvas),
