@@ -47,7 +47,7 @@ impl StateLeds {
 
 		let mut sprite = Sprite::from(&ctx.assets.state_led);
 
-		if state.emu.wait_for_keyrelease.is_some() {
+		if state.emu.wait_for_keypress.is_some() {
 			// Keyboard wait LED
 			sprite.frame.x = 0;
 			sprite.pos = KEYBOARD_WAIT_POS;

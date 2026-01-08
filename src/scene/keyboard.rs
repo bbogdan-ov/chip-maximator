@@ -100,10 +100,9 @@ impl Keyboard {
 				ctx.tooltip.set(&msg);
 			}
 
-			state.emu.set_pressed_key(*key as u8, sprite.pressed);
-			if sprite.just_released {
-				state.emu.set_released_key(*key as u8);
-			}
+			state
+				.emu
+				.set_pressed_key(*key as u8, sprite.pressed, sprite.just_pressed);
 		}
 	}
 }
